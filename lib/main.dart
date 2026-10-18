@@ -15,8 +15,8 @@ Future<void> main() async {
   // Needs a ".env" file (copy .env.example). See README.
   await dotenv.load(fileName: '.env');
   await Supabase.initialize(
-    url: dotenv.env['SUPABASE_URL']!,
-    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
+  url: dotenv.env['SUPABASE_URL']!,
+  publishableKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
 
   runApp(
