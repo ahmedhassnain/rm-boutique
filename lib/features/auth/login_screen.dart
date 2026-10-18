@@ -1,0 +1,78 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../../core/theme/app_theme.dart';
+import 'auth_controller.dart';
+
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final _email = TextEditingController();
+  final _password = TextEditingController();
+  bool _busy = false;
+  String? _error;
+
+  Future<void> _submit() async {
+    setState(() { _busy = true; _error = null; });
+    try {
+      await context.read<AuthController>().signIn(_email.text, _password.text);
+      // The router redirects to the right area once the profile loads.
+    } on AuthException catch (e) {
+      setState(() => _error = e.message);
+    } catch (_) {
+      setState(() => _error = 'Something went wrong. Check your connection and try again.');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  void dispose() { _email.dispose(); _password.dispose(); super.dispose(); }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text('R&M Boutique', textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 4),
+                  const Text('Sign in', textAlign: TextAlign.center),
+                  const SizedBox(height: 24),
+                  TextField(controller: _email, keyboardType: TextInputType.emailAddress,
+                      decoration: const InputDecoration(labelText: 'Email')),
+                  const SizedBox(height: 12),
+                  TextField(controller: _password, obscureText: true,
+                      decoration: const InputDecoration(labelText: 'Password')),
+                  if (_error != null) ...[
+                    const SizedBox(height: 12),
+                    Text(_error!, style: const TextStyle(color: AppColors.terracotta)),
+                  ],
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: _busy ? null : _submit,
+                    child: _busy ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Sign in'),
+                  ),
+                  TextButton(onPressed: () => context.go('/register'), child: const Text('Create a customer account')),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

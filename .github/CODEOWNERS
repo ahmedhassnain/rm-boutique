@@ -1,0 +1,8 @@
+# Replace the placeholders with real GitHub usernames.
+# GitHub then asks the owner to review any pull request touching their area.
+/lib/features/admin/      @AHMED-USERNAME
+/lib/features/customer/   @MAHEEN-USERNAME
+/lib/features/rider/      @AHMAD-USERNAME
+/lib/core/                @AHMED-USERNAME
+/lib/shared/              @AHMED-USERNAME @MAHEEN-USERNAME @AHMAD-USERNAME
+/supabase/                @AHMED-USERNAME @MAHEEN-USERNAME @AHMAD-USERNAME
