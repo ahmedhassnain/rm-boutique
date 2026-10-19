@@ -6,6 +6,9 @@ import '../features/auth/auth_controller.dart';
 import '../features/auth/login_screen.dart';
 import '../features/auth/register_screen.dart';
 import '../features/customer/views/customer_home_screen.dart';
+import '../features/customer/views/product_detail_screen.dart';
+import '../features/customer/views/size_guide_screen.dart';
+import '../features/customer/views/checkout_screen.dart';
 import '../features/rider/views/rider_home_screen.dart';
 
 /// Role-based routing.
@@ -48,8 +51,22 @@ GoRouter buildRouter(AuthController auth) {
       GoRoute(
         path: '/customer',
         builder: (_, __) => const CustomerHomeScreen(),
-        routes: const [
+        routes: [
           // Maheen: add customer screens here
+          GoRoute(
+            path: 'product/:id',
+            builder: (_, state) =>
+                ProductDetailScreen(productId: state.pathParameters['id']!),
+          ),
+          GoRoute(
+            path: 'size-guide',
+            builder: (_, __) => const SizeGuideScreen(),
+          ),
+          GoRoute(
+            path: 'checkout',
+            builder: (_, state) =>
+                CheckoutScreen(args: state.extra as CheckoutArgs),
+          ),
         ],
       ),
       GoRoute(

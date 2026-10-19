@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -11,7 +12,7 @@ import '../viewmodels/products_viewmodel.dart';
 
 /// OWNER: Maheen.
 /// Customer browse screen: the catalogue of products with live stock.
-/// Tapping a product will open the detail page (built in the next step).
+/// Tapping a product opens its detail page.
 class CustomerHomeScreen extends StatelessWidget {
   const CustomerHomeScreen({super.key});
 
@@ -70,10 +71,7 @@ class _ProductCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
-        onTap: () {
-          // TODO (next step): open the product detail page, e.g.
-          //   context.go('/customer/product/${product.id}');
-        },
+        onTap: () => context.push('/customer/product/${product.id}'),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -144,8 +142,6 @@ class _Photo extends StatelessWidget {
   }
 }
 
-/// "Sold out" when nothing is left, "Only N left" when stock is low,
-/// and nothing at all when there is plenty.
 class _StockBadge extends StatelessWidget {
   const _StockBadge({required this.stock});
   final int stock;
