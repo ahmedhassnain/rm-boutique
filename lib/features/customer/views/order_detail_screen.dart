@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-
+import 'order_tracking.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/status_chip.dart';
 import '../../../shared/repositories/order_repository.dart';
@@ -72,6 +72,8 @@ class OrderDetailScreen extends StatelessWidget {
                             Text(
                                 'Needed by: ${DateFormat.yMMMd().format(o.neededBy!)}'),
                           const SizedBox(height: 20),
+                          OrderTracking(order: o, deliveryUrl: vm.deliveryUrl),
+                          const SizedBox(height: 12),
                           _PaymentCard(vm: vm),
                         ],
                       ),

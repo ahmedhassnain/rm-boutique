@@ -26,6 +26,7 @@ class OrderDetailViewModel extends ChangeNotifier {
 
   Order? order;
   String? proofUrl;
+  String? deliveryUrl;
   bool loading = true;
   bool uploading = false;
   String? error;
@@ -39,9 +40,11 @@ class OrderDetailViewModel extends ChangeNotifier {
     try {
       order = await _orders.fetchOrder(orderId);
       final p = order!.payment;
-      proofUrl = p == null
-          ? null
-          : await _storage.signedUrl('payment-proofs', p.screenshotPath);
+      final d = order!.delivery;
+      proofUrl =
+          p == null ? null : await _signed('payment-proofs', p.screenshotPath);
+      deliveryUrl =
+          d == null ? null : await _signed('delivery-photos', d.photoPath);
     } catch (e) {
       if (!silent) error = 'Could not load this order.';
     }
@@ -76,6 +79,14 @@ class OrderDetailViewModel extends ChangeNotifier {
     }
     uploading = false;
     _notify();
+  }
+
+  Future<String?> _signed(String bucket, String path) async {
+    try {
+      return await _storage.signedUrl(bucket, path);
+    } catch (_) {
+      return null; // a missing photo must not break the whole page
+    }
   }
 
   void _notify() {
