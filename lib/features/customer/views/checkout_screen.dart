@@ -199,7 +199,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       );
       if (!context.mounted) return;
       // Back to the customer home / orders.
-      context.go('/customer');
+      context.go('/customer/orders');
     }
     // On failure the error is shown inline by the Consumer above.
   }

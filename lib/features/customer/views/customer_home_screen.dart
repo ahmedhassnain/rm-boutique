@@ -24,6 +24,11 @@ class CustomerHomeScreen extends StatelessWidget {
       create: (c) => ProductsViewModel(c.read<ProductRepository>())..load(),
       child: RoleScaffold(
         title: 'R&M Boutique',
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () => context.push('/customer/orders'),
+          icon: const Icon(Icons.receipt_long),
+          label: const Text('My orders'),
+        ),
         body: Consumer<ProductsViewModel>(
           builder: (context, vm, _) {
             if (vm.loading) {
