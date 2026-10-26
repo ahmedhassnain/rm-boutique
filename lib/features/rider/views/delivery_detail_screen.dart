@@ -142,7 +142,13 @@ class _ContactCard extends StatelessWidget {
                 children: [
                   const Icon(Icons.event, size: 18, color: AppColors.olive),
                   const SizedBox(width: 6),
-                  Text('Needed by ${DateFormat.yMMMd().format(neededBy!)}'),
+                  Expanded(
+                    child: Text(
+                      'Needed by ${DateFormat.yMMMd().format(neededBy!)}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                 ],
               ),
             ],

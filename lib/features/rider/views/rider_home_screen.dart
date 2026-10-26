@@ -89,7 +89,9 @@ class _DeliveriesList extends StatelessWidget {
           child: ListTile(
             onTap: () => context.go('/rider/delivery/${o.id}'),
             title: Text(
-                'Order ${o.id.substring(0, 8)}  ·  ${money.format(o.total)}'),
+                'Order ${o.id.substring(0, 8)}  ·  ${money.format(o.total)}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis),
             subtitle: Text(o.deliveryAddress, maxLines: 2, overflow: TextOverflow.ellipsis),
             trailing: StatusChip(o.status),
           ),
@@ -119,11 +121,19 @@ class _HistoryTab extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('${vm.history.length} delivered',
-                  style: const TextStyle(fontWeight: FontWeight.w600)),
-              Text('Earnings: ${money.format(vm.earnings)}',
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w700, color: AppColors.olive)),
+              Flexible(
+                child: Text('${vm.history.length} delivered',
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w600)),
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text('Earnings: ${money.format(vm.earnings)}',
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.right,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w700, color: AppColors.olive)),
+              ),
             ],
           ),
         ),
