@@ -24,8 +24,18 @@ class StorageRepository {
   }) async {
     final path = '$orderId/proof.jpg';
     await _db.storage.from('payment-proofs').uploadBinary(path, bytes, fileOptions: _jpeg);
+    // verified/flagged are sent explicitly: a replacement receipt must clear
+    // the admin's "flagged" mark (the database only accepts a replacement
+    // with flagged = false) and puts the payment back in the admin's
+    // "To review" list.
     await _db.from('payments').upsert(
-      {'order_id': orderId, 'screenshot_path': path, 'amount': amount},
+      {
+        'order_id': orderId,
+        'screenshot_path': path,
+        'amount': amount,
+        'verified': false,
+        'flagged': false,
+      },
       onConflict: 'order_id',
     );
   }
