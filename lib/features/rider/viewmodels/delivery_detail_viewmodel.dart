@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
@@ -8,7 +7,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/widgets/image_picker_helper.dart';
 import '../../../shared/models/order.dart';
 import '../../../shared/models/profile.dart';
-import '../../../shared/order_status.dart';
 import '../../../shared/repositories/order_repository.dart';
 import '../../../shared/repositories/storage_repository.dart';
 
