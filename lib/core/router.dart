@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/admin/views/add_order_screen.dart';
 import '../features/admin/views/admin_home_screen.dart';
+import '../features/admin/views/admin_order_detail_screen.dart';
 import '../features/auth/auth_controller.dart';
 import '../features/auth/login_screen.dart';
 import '../features/auth/register_screen.dart';
@@ -47,8 +49,13 @@ GoRouter buildRouter(AuthController auth) {
       GoRoute(
         path: '/admin',
         builder: (_, __) => const AdminHomeScreen(),
-        routes: const [
-          // Ahmed: add admin screens here
+        routes: [
+          GoRoute(
+            path: 'order/:id',
+            builder: (_, state) =>
+                AdminOrderDetailScreen(orderId: state.pathParameters['id']!),
+          ),
+          GoRoute(path: 'add-order', builder: (_, __) => const AddOrderScreen()),
         ],
       ),
       GoRoute(

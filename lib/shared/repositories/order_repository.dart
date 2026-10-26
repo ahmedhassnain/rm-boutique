@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/supabase_client.dart';
 import '../models/cart_line.dart';
 import '../models/order.dart';
+import '../models/payment.dart';
 import '../models/profile.dart';
 import '../order_status.dart';
 
@@ -101,6 +102,14 @@ class OrderRepository {
       'verified_at': DateTime.now().toIso8601String(),
     }).eq('order_id', orderId);
   }
+
+  /// Admin: live payments table. Emits again whenever a customer uploads a
+  /// receipt or the admin reviews one, so the payment panel never goes stale
+  /// (the orders stream alone does not change when only a payment changes).
+  Stream<List<Payment>> watchPayments() => _db
+      .from('payments')
+      .stream(primaryKey: ['id'])
+      .map((rows) => rows.map(Payment.fromJson).toList());
 
   /// Admin: the riders to choose from when assigning.
   Future<List<Profile>> fetchRiders() async {
