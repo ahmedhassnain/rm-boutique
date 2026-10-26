@@ -4,13 +4,21 @@ import 'package:provider/provider.dart';
 import '../../features/auth/auth_controller.dart';
 
 /// Page frame used by every role's screens: app bar with the user's name
-/// and a sign-out button.
+/// and a sign-out button. [bottomNavigationBar] is optional so existing
+/// single-page roles (admin, customer) are unaffected.
 class RoleScaffold extends StatelessWidget {
-  const RoleScaffold({super.key, required this.title, required this.body, this.floatingActionButton});
+  const RoleScaffold({
+    super.key,
+    required this.title,
+    required this.body,
+    this.floatingActionButton,
+    this.bottomNavigationBar,
+  });
 
   final String title;
   final Widget body;
   final Widget? floatingActionButton;
+  final Widget? bottomNavigationBar;
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +37,7 @@ class RoleScaffold extends StatelessWidget {
         ],
       ),
       floatingActionButton: floatingActionButton,
+      bottomNavigationBar: bottomNavigationBar,
       body: body,
     );
   }

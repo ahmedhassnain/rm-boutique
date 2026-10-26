@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
-import '../../../../core/theme/app_theme.dart';
+import '../theme/app_theme.dart';
 
-/// OWNER: rider (built for Maheen's checkout, task 3).
+/// SHARED widget (moved here from the rider feature so any screen can use
+/// it directly, no copy-paste needed).
 ///
 /// A self-contained "pick a location on the map" field. Drop it into any
 /// form: it shows an OpenStreetMap view (free, no API key/credit card
@@ -13,14 +14,15 @@ import '../../../../core/theme/app_theme.dart';
 ///
 /// Usage (e.g. in checkout_screen.dart, alongside the address text field):
 /// ```dart
+/// import '../../../core/widgets/location_picker_map.dart';
+///
 /// LocationPickerMap(
 ///   initial: const LatLng(31.9522, 35.2332), // optional starting point
 ///   onChanged: (point) => vm.setLocation(point.latitude, point.longitude),
 /// )
 /// ```
-/// Maheen: copy this file into lib/features/customer/views/widgets/ (or
-/// import it from here directly) and wire `onChanged` into
-/// `OrderRepository.placeOrder(lat:, lng:, ...)`.
+/// Maheen: import this directly from lib/core/widgets/location_picker_map.dart
+/// in checkout and wire `onChanged` into `OrderRepository.placeOrder(lat:, lng:, ...)`.
 class LocationPickerMap extends StatefulWidget {
   const LocationPickerMap({
     super.key,

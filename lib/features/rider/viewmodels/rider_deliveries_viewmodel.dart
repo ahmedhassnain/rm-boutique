@@ -6,9 +6,10 @@ import '../../../shared/models/order.dart';
 import '../../../shared/order_status.dart';
 import '../../../shared/repositories/order_repository.dart';
 
-/// Placeholder flat fee per delivery, used only for the earnings total on
-/// the History tab. Ask the group if there is a real figure to use (e.g. a
-/// per-order fee column) before this goes in the final report.
+/// Flat fee per delivery (confirmed with Ahmed), used for the estimated
+/// earnings total on the History tab. There's no per-order fee column in
+/// the schema, so this is a flat rate shown to the rider as an estimate,
+/// not a final payout figure.
 const double kDeliveryFee = 15.0;
 
 /// OWNER: rider. Live list of orders assigned to the signed-in rider
