@@ -30,7 +30,23 @@ class OrderDetailScreen extends StatelessWidget {
             body: vm.loading
                 ? const Center(child: CircularProgressIndicator())
                 : o == null
-                    ? Center(child: Text(vm.error ?? 'Order not found'))
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(vm.error ?? 'Order not found',
+                                  textAlign: TextAlign.center),
+                              const SizedBox(height: 12),
+                              OutlinedButton(
+                                onPressed: vm.load,
+                                child: const Text('Try again'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
                     : ListView(
                         padding: const EdgeInsets.all(16),
                         children: [
