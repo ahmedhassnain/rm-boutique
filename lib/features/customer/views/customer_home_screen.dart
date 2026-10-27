@@ -12,10 +12,10 @@ import '../../../shared/repositories/storage_repository.dart';
 import '../viewmodels/products_viewmodel.dart';
 
 /// OWNER: Maheen.
-/// Customer main page (matches the Part 1 wireframe): search bar with a
-/// clear button, a sort dropdown, category tabs, a two-column grid of
-/// product cards, and a four-item bottom bar. Tapping a product opens its
-/// detail page.
+/// Customer main page (matches the Part 1 wireframe): a search bar with a
+/// clear button, a sort dropdown stacked beneath it, three category tabs, a
+/// two-column grid of product cards (image, header, body text, label), and a
+/// four-item bottom bar. Tapping a product opens its detail page.
 class CustomerHomeScreen extends StatelessWidget {
   const CustomerHomeScreen({super.key});
 
@@ -23,10 +23,10 @@ class CustomerHomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (c) => ProductsViewModel(c.read<ProductRepository>())..load(),
-      child: RoleScaffold(
+      child: const RoleScaffold(
         title: 'R&M Boutique',
-        bottomNavigationBar: const _CustomerBottomBar(),
-        body: const _Catalogue(),
+        bottomNavigationBar: _CustomerBottomBar(),
+        body: _Catalogue(),
       ),
     );
   }
@@ -94,7 +94,7 @@ class _CatalogueState extends State<_Catalogue> {
                           crossAxisCount: 2,
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
-                          childAspectRatio: 0.62,
+                          childAspectRatio: 0.58,
                         ),
                         itemCount: items.length,
                         itemBuilder: (context, i) =>
@@ -120,38 +120,35 @@ class _Header extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
       child: Column(
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: controller,
-                  onChanged: vm.setQuery,
-                  textInputAction: TextInputAction.search,
-                  decoration: InputDecoration(
-                    hintText: 'Search products',
-                    isDense: true,
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: vm.query.isEmpty
-                        ? null
-                        : IconButton(
-                            tooltip: 'Clear',
-                            icon: const Icon(Icons.clear),
-                            onPressed: () {
-                              controller.clear();
-                              vm.clearQuery();
-                            },
-                          ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+          // Search bar (full width).
+          TextField(
+            controller: controller,
+            onChanged: vm.setQuery,
+            textInputAction: TextInputAction.search,
+            decoration: InputDecoration(
+              hintText: 'Search products',
+              isDense: true,
+              prefixIcon: const Icon(Icons.search),
+              suffixIcon: vm.query.isEmpty
+                  ? null
+                  : IconButton(
+                      tooltip: 'Clear',
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        controller.clear();
+                        vm.clearQuery();
+                      },
                     ),
-                  ),
-                ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
-              const SizedBox(width: 8),
-              _SortDropdown(vm: vm),
-            ],
+            ),
           ),
           const SizedBox(height: 10),
+          // Sort dropdown (full width, beneath the search bar).
+          _SortDropdown(vm: vm),
+          const SizedBox(height: 10),
+          // Category tabs.
           SizedBox(
             height: 44,
             child: ListView.separated(
@@ -186,7 +183,8 @@ class _SortDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
         border: Border.all(color: Colors.grey.shade400),
         borderRadius: BorderRadius.circular(12),
@@ -196,6 +194,7 @@ class _SortDropdown extends StatelessWidget {
           value: vm.sort,
           icon: const Icon(Icons.sort),
           isDense: true,
+          isExpanded: true,
           borderRadius: BorderRadius.circular(12),
           onChanged: (v) {
             if (v != null) vm.setSort(v);
@@ -249,6 +248,7 @@ class _ProductCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Header
                   Text(
                     product.name,
                     maxLines: 1,
@@ -256,13 +256,7 @@ class _ProductCard extends StatelessWidget {
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 2),
-                  Text(
-                    product.category,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Colors.grey, fontSize: 12),
-                  ),
-                  const SizedBox(height: 2),
+                  // Body text
                   Text(
                     _price.format(product.price),
                     style: const TextStyle(
@@ -270,11 +264,36 @@ class _ProductCard extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
+                  const SizedBox(height: 6),
+                  // Label pill
+                  _CategoryLabel(text: product.category),
                 ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _CategoryLabel extends StatelessWidget {
+  const _CategoryLabel({required this.text});
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        border: Border.all(color: AppColors.olive.withValues(alpha: 0.4)),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        text,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontSize: 10, color: AppColors.olive),
       ),
     );
   }

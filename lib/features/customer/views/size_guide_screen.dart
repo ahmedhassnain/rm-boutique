@@ -53,9 +53,9 @@ class SizeGuideScreen extends StatelessWidget {
       columnWidths: const {0: FixedColumnWidth(64)},
       defaultVerticalAlignment: TableCellVerticalAlignment.middle,
       children: [
-        TableRow(
-          decoration: const BoxDecoration(color: AppColors.sand),
-          children: const [
+        const TableRow(
+          decoration: BoxDecoration(color: AppColors.sand),
+          children: [
             _Cell('Size', style: headStyle),
             _Cell('Bust', style: headStyle),
             _Cell('Waist', style: headStyle),
