@@ -6,6 +6,7 @@ import '../features/auth/auth_controller.dart';
 import '../features/auth/login_screen.dart';
 import '../features/auth/register_screen.dart';
 import '../features/customer/views/customer_home_screen.dart';
+import '../features/rider/views/delivery_detail_screen.dart';
 import '../features/rider/views/rider_home_screen.dart';
 
 /// Role-based routing.
@@ -55,8 +56,13 @@ GoRouter buildRouter(AuthController auth) {
       GoRoute(
         path: '/rider',
         builder: (_, __) => const RiderHomeScreen(),
-        routes: const [
+        routes: [
           // Ahmad: add rider screens here
+          GoRoute(
+            path: 'delivery/:id',
+            builder: (_, state) =>
+                DeliveryDetailScreen(orderId: state.pathParameters['id']!),
+          ),
         ],
       ),
     ],
