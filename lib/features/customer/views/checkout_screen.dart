@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/location_picker_map.dart';
 import '../../../shared/repositories/order_repository.dart';
 import '../viewmodels/checkout_viewmodel.dart';
 
@@ -79,6 +81,23 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     validator: (v) => (v == null || v.trim().length < 8)
                         ? 'Please enter a full delivery address'
                         : null,
+                  ),
+                  const SizedBox(height: 20),
+                  const _Label('Pin your location for the rider'),
+                  const SizedBox(height: 4),
+                  Text(
+                    vm.lat == null
+                        ? 'Tap the map to drop a pin where you want delivery.'
+                        : 'Location pinned ✓  Tap again to adjust.',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: vm.lat == null ? Colors.grey : AppColors.olive,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  LocationPickerMap(
+                    onChanged: (LatLng point) =>
+                        vm.setLocation(point.latitude, point.longitude),
                   ),
                   const SizedBox(height: 20),
                   const _Label('Needed by (optional)'),

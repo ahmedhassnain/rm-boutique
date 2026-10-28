@@ -15,11 +15,21 @@ class CheckoutViewModel extends ChangeNotifier {
   final int quantity;
 
   DateTime? neededBy;
+  double? lat;
+  double? lng;
   bool placing = false;
   String? error;
 
   void setNeededBy(DateTime? date) {
     neededBy = date;
+    notifyListeners();
+  }
+
+  /// Called when the customer taps the map to pin their delivery spot.
+  /// The coordinates travel with the order so the rider's screen can show it.
+  void setLocation(double latitude, double longitude) {
+    lat = latitude;
+    lng = longitude;
     notifyListeners();
   }
 
@@ -32,6 +42,8 @@ class CheckoutViewModel extends ChangeNotifier {
       final id = await _orders.placeOrder(
         address: address.trim(),
         items: [CartLine(variantId: variantId, quantity: quantity)],
+        lat: lat,
+        lng: lng,
         neededBy: neededBy,
         notes: (notes == null || notes.trim().isEmpty) ? null : notes.trim(),
       );
