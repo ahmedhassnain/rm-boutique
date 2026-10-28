@@ -58,6 +58,28 @@ void main() {
     expect(picked, 'Paid');
   });
 
+  testWidgets('two-column filter buttons form a 2 x 2 grid', (tester) async {
+    String? picked;
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: FilterChips<String>(
+          options: const ['A', 'B', 'C', 'D'],
+          selected: 'A',
+          labelOf: (s) => s,
+          onSelected: (s) => picked = s,
+          twoColumns: true,
+        ),
+      ),
+    ));
+    final a = tester.getTopLeft(find.text('A'));
+    final b = tester.getTopLeft(find.text('B'));
+    final c = tester.getTopLeft(find.text('C'));
+    expect(a.dy, b.dy); // A and B share the first row
+    expect(c.dy, greaterThan(a.dy)); // C starts the second row
+    await tester.tap(find.text('D'));
+    expect(picked, 'D');
+  });
+
   testWidgets('summary tile shows its number and label', (tester) async {
     await tester.pumpWidget(const MaterialApp(
       home: Scaffold(body: SummaryTile(value: '7', label: 'Need action')),

@@ -110,7 +110,7 @@ void main() {
   test('a database refusal becomes a readable message', () async {
     repo.single = makeOrder(status: 'paid');
     repo.actionError =
-        PostgrestException(message: 'Assign a rider before dispatching');
+        const PostgrestException(message: 'Assign a rider before dispatching');
     final vm = await open();
     expect(await vm.advance(), false);
     expect(vm.actionError, 'Assign a rider before dispatching');

@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/theme/app_theme.dart';
-import '../viewmodels/admin_inventory_viewmodel.dart';
 import '../viewmodels/admin_orders_viewmodel.dart';
 import 'widgets/admin_order_card.dart';
 import 'widgets/filter_chips.dart';
@@ -11,19 +9,20 @@ import 'widgets/search_field.dart';
 import 'widgets/summary_tile.dart';
 
 /// OWNER: Ahmed (admin). The "Manage orders" screen: the order command centre.
-/// Top to bottom this follows the admin wireframe: search bar, filter chips,
-/// three summary blocks, the order list, and the primary "Add order" button.
+/// Top to bottom this follows the admin wireframe in the proposal: search bar,
+/// four filter buttons in a 2 x 2 grid, two summary blocks and the order list.
+/// The small "+" (Add order) button belongs to the frame, see
+/// admin_home_screen.dart.
 class OrdersTab extends StatelessWidget {
   const OrdersTab({super.key, required this.onOpenTab});
 
   /// Switches the bottom navigation to another tab (0 orders, 1 payments,
-  /// 2 inventory, 3 riders, 4 inbox).
+  /// 2 inventory, 3 inbox).
   final void Function(int index) onOpenTab;
 
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<AdminOrdersViewModel>();
-    final stock = context.watch<AdminInventoryViewModel>();
     final orders = vm.visible;
 
     return Column(
@@ -50,6 +49,7 @@ class OrdersTab extends StatelessWidget {
                           selected: vm.filter,
                           labelOf: (f) => f.label,
                           onSelected: vm.setFilter,
+                          twoColumns: true,
                         ),
                         const SizedBox(height: 16),
                         Row(
@@ -70,15 +70,6 @@ class OrdersTab extends StatelessWidget {
                                 label: 'Payments to review',
                                 warn: vm.paymentsToReviewCount > 0,
                                 onTap: () => onOpenTab(1),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: SummaryTile(
-                                value: '${stock.alerts.length}',
-                                label: 'Low or sold out',
-                                warn: stock.alerts.isNotEmpty,
-                                onTap: () => onOpenTab(2),
                               ),
                             ),
                           ],
@@ -117,7 +108,7 @@ class OrdersTab extends StatelessWidget {
                   )
                 else
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 88),
                     sliver: SliverList(
                       delegate: SliverChildBuilderDelegate(
                         (context, i) => Padding(
@@ -134,20 +125,6 @@ class OrdersTab extends StatelessWidget {
                   ),
               ],
             ),
-          ),
-        ),
-        // Primary action, pinned above the bottom navigation bar.
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
-          decoration: const BoxDecoration(
-            color: AppColors.ivory,
-            border: Border(top: BorderSide(color: AppColors.sand)),
-          ),
-          child: ElevatedButton.icon(
-            onPressed: () => context.push('/admin/add-order'),
-            icon: const Icon(Icons.add),
-            label: const Text('Add order'),
           ),
         ),
       ],

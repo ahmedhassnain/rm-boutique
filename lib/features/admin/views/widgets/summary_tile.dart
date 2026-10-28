@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
 
-/// One of the three summary blocks under the filter chips: a big number on
+/// One of the two summary blocks under the filter buttons: a big number on
 /// top and a short grey label below. Tap it to jump to the matching list.
 class SummaryTile extends StatelessWidget {
   const SummaryTile({

@@ -39,6 +39,7 @@ class _PaymentsTabState extends State<PaymentsTab> {
                 selected: _filter,
                 labelOf: (f) => '${f.label} (${vm.paymentsFor(f).length})',
                 onSelected: (f) => setState(() => _filter = f),
+                twoColumns: true,
               ),
             ),
           ),

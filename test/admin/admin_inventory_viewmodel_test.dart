@@ -70,7 +70,7 @@ void main() {
   });
 
   test('a database refusal is reported', () async {
-    repo.updateError = PostgrestException(message: 'Not allowed');
+    repo.updateError = const PostgrestException(message: 'Not allowed');
     final vm = await start();
     expect(await vm.setStock(vm.products.first.variants.first, 5), false);
     expect(vm.actionError, 'Not allowed');

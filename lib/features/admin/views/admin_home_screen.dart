@@ -9,18 +9,19 @@ import '../../../shared/repositories/product_repository.dart';
 import '../../auth/auth_controller.dart';
 import '../viewmodels/admin_inventory_viewmodel.dart';
 import '../viewmodels/admin_orders_viewmodel.dart';
-import '../viewmodels/admin_riders_viewmodel.dart';
 import 'inbox_tab.dart';
 import 'inventory_tab.dart';
 import 'orders_tab.dart';
 import 'payments_tab.dart';
-import 'riders_tab.dart';
 import 'widgets/admin_format.dart';
 
 /// OWNER: Ahmed (admin). The admin app frame: top bar (title, alerts bell,
-/// sign out), the five tabs, and the bottom navigation bar from the wireframe.
+/// sign out), the four tabs, the small "+" button and the bottom navigation
+/// bar, as in the admin wireframe of the proposal. The four tabs are the four
+/// admin features: order command centre, payment verification, inventory sync
+/// and communication hub.
 ///
-/// The three view-models are created ONCE here, above the tabs, so every tab
+/// The view-models are created ONCE here, above the tabs, so every tab
 /// (and the alerts bell) reads the same live data instead of loading its own.
 class AdminHomeScreen extends StatefulWidget {
   const AdminHomeScreen({super.key});
@@ -36,7 +37,6 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     'Manage orders',
     'Payments',
     'Inventory',
-    'Riders',
     'Inbox',
   ];
 
@@ -52,9 +52,6 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         ChangeNotifierProvider(
           create: (c) => AdminInventoryViewModel(c.read<ProductRepository>()),
         ),
-        ChangeNotifierProvider(
-          create: (c) => AdminRidersViewModel(c.read<OrderRepository>()),
-        ),
       ],
       child: Scaffold(
         appBar: AppBar(
@@ -68,6 +65,19 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
             ),
           ],
         ),
+        // The "+" of the wireframe: only on the Orders tab.
+        floatingActionButton: _index == 0
+            ? FloatingActionButton(
+                tooltip: 'Add order',
+                backgroundColor: AppColors.olive,
+                foregroundColor: AppColors.ivory,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                onPressed: () => context.push('/admin/add-order'),
+                child: const Icon(Icons.add),
+              )
+            : null,
         // IndexedStack keeps every tab alive, so switching tabs never loses
         // a search, a filter or the scroll position.
         body: IndexedStack(
@@ -76,7 +86,6 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
             OrdersTab(onOpenTab: _openTab),
             const PaymentsTab(),
             const InventoryTab(),
-            const RidersTab(),
             const InboxTab(),
           ],
         ),
@@ -100,11 +109,6 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
               icon: Icon(Icons.inventory_2_outlined),
               selectedIcon: Icon(Icons.inventory_2),
               label: 'Inventory',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.two_wheeler_outlined),
-              selectedIcon: Icon(Icons.two_wheeler),
-              label: 'Riders',
             ),
             NavigationDestination(
               icon: Icon(Icons.forum_outlined),
