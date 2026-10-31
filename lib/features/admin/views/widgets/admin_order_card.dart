@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/product_photo.dart';
 import '../../../../core/widgets/status_chip.dart';
 import '../../../../shared/models/order.dart';
 import 'admin_format.dart';
@@ -20,10 +21,10 @@ class AdminOrderCard extends StatelessWidget {
     return Material(
       color: Colors.white,
       clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: const BorderSide(color: AppColors.sand, width: 1.5),
-      ),
+      elevation: 2,
+      shadowColor: AppSurface.shadowColor,
+      surfaceTintColor: Colors.transparent,
+      shape: AppSurface.card(),
       child: InkWell(
         onTap: onTap,
         child: Padding(
@@ -31,27 +32,12 @@ class AdminOrderCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Picture slot. Real product photos come in the UI/UX phase.
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  color: AppColors.ivory,
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: AppColors.sand),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.checkroom_outlined,
-                        color: AppColors.olive),
-                    if (count > 0)
-                      Text(
-                        count == 1 ? '1 item' : '$count items',
-                        style: const TextStyle(fontSize: 11),
-                      ),
-                  ],
-                ),
+              // The photo of the first item, with the item count over it.
+              ProductPhoto(
+                imagePath:
+                    order.items.isEmpty ? null : order.items.first.imagePath,
+                size: 64,
+                badge: count > 0 ? (count == 1 ? '1 item' : '$count items') : null,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -79,7 +65,7 @@ class AdminOrderCard extends StatelessWidget {
                       '${adminMoney.format(order.total)}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: Colors.black87),
+                      style: const TextStyle(color: AppColors.slate),
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -87,7 +73,7 @@ class AdminOrderCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style:
-                          const TextStyle(fontSize: 12, color: Colors.black54),
+                          const TextStyle(fontSize: 12, color: AppColors.muted),
                     ),
                     if (order.isUrgent)
                       Padding(
@@ -95,14 +81,14 @@ class AdminOrderCard extends StatelessWidget {
                         child: Row(
                           children: [
                             const Icon(Icons.flag,
-                                size: 14, color: AppColors.terracotta),
+                                size: 14, color: AppColors.alert),
                             const SizedBox(width: 4),
                             Text(
                               'Needed by ${adminDate(order.neededBy!)}',
                               style: const TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
-                                color: AppColors.terracotta,
+                                color: AppColors.alert,
                               ),
                             ),
                           ],

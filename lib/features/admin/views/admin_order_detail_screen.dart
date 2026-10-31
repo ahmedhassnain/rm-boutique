@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/product_photo.dart';
 import '../../../core/widgets/status_chip.dart';
 import '../../../shared/models/order.dart';
 import '../../../shared/models/profile.dart';
@@ -92,10 +93,10 @@ class _Section extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: const BorderSide(color: AppColors.sand, width: 1.5),
-      ),
+      elevation: 2,
+      shadowColor: AppSurface.shadowColor,
+      surfaceTintColor: Colors.transparent,
+      shape: AppSurface.card(),
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Column(
@@ -122,10 +123,10 @@ class _Summary extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: const BorderSide(color: AppColors.sand, width: 1.5),
-      ),
+      elevation: 2,
+      shadowColor: AppSurface.shadowColor,
+      surfaceTintColor: Colors.transparent,
+      shape: AppSurface.card(),
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Column(
@@ -145,7 +146,7 @@ class _Summary extends StatelessWidget {
             ),
             if (order.customerPhone != null && order.customerPhone!.isNotEmpty)
               Text(order.customerPhone!,
-                  style: const TextStyle(color: Colors.black54)),
+                  style: const TextStyle(color: AppColors.muted)),
             const SizedBox(height: 10),
             _InfoRow(icon: Icons.place_outlined, text: order.deliveryAddress),
             _InfoRow(
@@ -156,7 +157,7 @@ class _Summary extends StatelessWidget {
               _InfoRow(
                 icon: order.isUrgent ? Icons.flag : Icons.flag_outlined,
                 text: 'Needed by ${adminDate(order.neededBy!)}',
-                colour: order.isUrgent ? AppColors.terracotta : null,
+                colour: order.isUrgent ? AppColors.alert : null,
               ),
             if (order.notes != null && order.notes!.isNotEmpty)
               _InfoRow(icon: Icons.sticky_note_2_outlined, text: order.notes!),
@@ -180,7 +181,7 @@ class _InfoRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 18, color: colour ?? AppColors.olive),
+          Icon(icon, size: 18, color: colour ?? AppColors.ink),
           const SizedBox(width: 8),
           Expanded(
             child: Text(text,
@@ -225,8 +226,8 @@ class _Timeline extends StatelessWidget {
                           : Icons.radio_button_unchecked,
                   size: 22,
                   color: s.index <= status.index
-                      ? AppColors.olive
-                      : Colors.black26,
+                      ? AppColors.ink
+                      : AppColors.tint,
                 ),
                 const SizedBox(width: 10),
                 Text(
@@ -235,13 +236,13 @@ class _Timeline extends StatelessWidget {
                     fontWeight: s.index == status.index
                         ? FontWeight.w700
                         : FontWeight.normal,
-                    color: s.index > status.index ? Colors.black45 : null,
+                    color: s.index > status.index ? AppColors.muted : null,
                   ),
                 ),
                 const Spacer(),
                 Text(_who(s.index),
                     style:
-                        const TextStyle(fontSize: 12, color: Colors.black45)),
+                        const TextStyle(fontSize: 12, color: AppColors.muted)),
               ],
             ),
           ),
@@ -266,6 +267,8 @@ class _Items extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 4),
             child: Row(
               children: [
+                ProductPhoto(imagePath: i.imagePath, size: 48),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -276,7 +279,7 @@ class _Items extends StatelessWidget {
                         '${i.size ?? ''} ${i.colour ?? ''} × ${i.quantity}'
                             .trim(),
                         style: const TextStyle(
-                            fontSize: 12, color: Colors.black54),
+                            fontSize: 12, color: AppColors.muted),
                       ),
                     ],
                   ),
@@ -316,7 +319,7 @@ class _PaymentPanel extends StatelessWidget {
     if (p == null) {
       return const Row(
         children: [
-          Icon(Icons.hourglass_top, color: Colors.black45),
+          Icon(Icons.hourglass_top, color: AppColors.muted),
           SizedBox(width: 10),
           Expanded(child: Text('Waiting for the customer to upload a receipt.')),
         ],
@@ -331,15 +334,15 @@ class _PaymentPanel extends StatelessWidget {
     final IconData statusIcon;
     if (p.verified) {
       statusText = 'Payment verified';
-      statusColour = AppColors.olive;
+      statusColour = AppColors.statusDelivered;
       statusIcon = Icons.verified;
     } else if (p.flagged) {
       statusText = 'Flagged as a mismatch';
-      statusColour = AppColors.terracotta;
+      statusColour = AppColors.alert;
       statusIcon = Icons.error_outline;
     } else {
       statusText = 'Waiting for your review';
-      statusColour = const Color(0xFF8A6D1F);
+      statusColour = AppColors.statusPaid;
       statusIcon = Icons.hourglass_top;
     }
 
@@ -368,7 +371,7 @@ class _PaymentPanel extends StatelessWidget {
             child: Text(
               'The receipt amount does not match the order total.',
               style: TextStyle(
-                  color: AppColors.terracotta, fontWeight: FontWeight.w600),
+                  color: AppColors.alert, fontWeight: FontWeight.w600),
             ),
           ),
         const SizedBox(height: 12),
@@ -376,7 +379,7 @@ class _PaymentPanel extends StatelessWidget {
           _ReceiptImage(url: vm.proofUrl!)
         else
           const Text('The receipt image could not be loaded right now.',
-              style: TextStyle(color: Colors.black54)),
+              style: TextStyle(color: AppColors.muted)),
         if (!p.verified) ...[
           const SizedBox(height: 12),
           Row(
@@ -423,7 +426,7 @@ class _ReceiptImage extends StatelessWidget {
         ),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(16),
         child: Image.network(
           url,
           height: 220,
@@ -493,14 +496,14 @@ class _RiderPanel extends StatelessWidget {
             child: Text(
               'Assigned: ${order.riderName}'
               '${order.riderPhone == null ? '' : '  ·  ${order.riderPhone}'}',
-              style: const TextStyle(color: Colors.black54),
+              style: const TextStyle(color: AppColors.muted),
             ),
           ),
         if (!vm.canAssignRider && vm.order!.status.index > OrderStatus.packed.index)
           const Padding(
             padding: EdgeInsets.only(top: 6),
             child: Text('The order has left the shop, so the rider is fixed.',
-                style: TextStyle(fontSize: 12, color: Colors.black54)),
+                style: TextStyle(fontSize: 12, color: AppColors.muted)),
           ),
       ],
     );
@@ -522,7 +525,7 @@ class _DeliveryProof extends StatelessWidget {
         Text('Delivered ${adminDateTime(d.deliveredAt)}'),
         if (d.notes != null && d.notes!.isNotEmpty)
           Text('Rider note: ${d.notes}',
-              style: const TextStyle(color: Colors.black54)),
+              style: const TextStyle(color: AppColors.muted)),
       ],
     );
   }
@@ -544,7 +547,7 @@ class _ActionBar extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
-        border: Border(top: BorderSide(color: AppColors.sand)),
+        border: Border(top: BorderSide(color: AppColors.tint)),
       ),
       child: SafeArea(
         child: Padding(
@@ -557,7 +560,7 @@ class _ActionBar extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: Text(vm.actionError!,
-                      style: const TextStyle(color: AppColors.terracotta)),
+                      style: const TextStyle(color: AppColors.alert)),
                 ),
               if (label == null)
                 Text(
@@ -565,7 +568,7 @@ class _ActionBar extends StatelessWidget {
                       ? 'This order has been delivered.'
                       : 'With the rider. They mark it delivered after taking '
                           'the photo.',
-                  style: const TextStyle(color: Colors.black54),
+                  style: const TextStyle(color: AppColors.muted),
                 )
               else ...[
                 if (blocker != null)
@@ -573,7 +576,7 @@ class _ActionBar extends StatelessWidget {
                     padding: const EdgeInsets.only(bottom: 8),
                     child: Text(blocker,
                         style: const TextStyle(
-                            fontSize: 12, color: Colors.black54)),
+                            fontSize: 12, color: AppColors.muted)),
                   ),
                 ElevatedButton(
                   onPressed: vm.canAdvance ? vm.advance : null,

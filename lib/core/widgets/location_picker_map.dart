@@ -55,7 +55,7 @@ class _LocationPickerMapState extends State<LocationPickerMap> {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(16),
       child: SizedBox(
         height: widget.height,
         child: Stack(
@@ -78,7 +78,7 @@ class _LocationPickerMapState extends State<LocationPickerMap> {
                     width: 36,
                     height: 36,
                     child: const Icon(Icons.location_pin,
-                        color: AppColors.terracotta, size: 36),
+                        color: AppColors.alert, size: 36),
                   ),
                 ]),
               ],
@@ -91,7 +91,7 @@ class _LocationPickerMapState extends State<LocationPickerMap> {
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.55),
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Text('Tap the map to drop a pin',
                     style: TextStyle(color: Colors.white, fontSize: 11)),

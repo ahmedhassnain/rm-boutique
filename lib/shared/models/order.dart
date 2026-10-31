@@ -10,6 +10,7 @@ class OrderItem {
     required this.quantity,
     required this.unitPrice,
     this.productName,
+    this.imagePath,
     this.size,
     this.colour,
   });
@@ -23,6 +24,7 @@ class OrderItem {
   // Filled only when the order was loaded with its details
   // (OrderRepository.fetchOrder / fetchOrders).
   final String? productName;
+  final String? imagePath; // products.image_path, for the photo
   final String? size;
   final String? colour;
 
@@ -38,6 +40,7 @@ class OrderItem {
       quantity: (json['quantity'] as num).toInt(),
       unitPrice: (json['unit_price'] as num).toDouble(),
       productName: product is Map ? product['name'] as String? : null,
+      imagePath: product is Map ? product['image_path'] as String? : null,
       size: variant is Map ? variant['size'] as String? : null,
       colour: variant is Map ? variant['colour'] as String? : null,
     );

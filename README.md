@@ -41,8 +41,11 @@ a small separate PR and tell the group).
 
 1. **Supabase project**: supabase.com -> New project (free plan).
    Authentication -> Providers -> Email -> turn **off** "Confirm email".
-2. **Database**: SQL editor -> paste and run `supabase/schema.sql`, then `supabase/policies.sql`
-   (in that order, each must finish without errors).
+2. **Database**: SQL editor -> paste and run `supabase/schema.sql`, then `supabase/policies.sql`,
+   then `supabase/admin_orders.sql` (the admin's "Add order") and `supabase/chat.sql` (chat for
+   customers and riders). Both are safe to run twice. In that order, each must finish without
+   errors. To try the chat with sample conversations, run `supabase/demo_chat.sql` after the
+   seed in step 3.
 3. **Test users**: Authentication -> Users -> Add user (tick *Auto Confirm User*):
    `admin@rm-boutique.test`, `customer@rm-boutique.test`, `rider@rm-boutique.test`
    (password `Test1234!`). Then run `supabase/seed.sql` (promotes admin and rider, adds products).

@@ -7,6 +7,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/models/product.dart';
 import '../../../shared/repositories/product_repository.dart';
 import '../../../shared/repositories/storage_repository.dart';
+import '../viewmodels/cart_viewmodel.dart';
 import '../viewmodels/product_detail_viewmodel.dart';
 import 'checkout_screen.dart';
 
@@ -70,20 +71,18 @@ class ProductDetailScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(p.name,
-                  style: const TextStyle(
-                      fontSize: 20, fontWeight: FontWeight.w600)),
+              Text(p.name, style: AppTheme.display(size: 28)),
               const SizedBox(height: 4),
               Text(_price.format(p.price),
                   style: const TextStyle(
                       fontSize: 18,
-                      color: AppColors.terracotta,
-                      fontWeight: FontWeight.w600)),
+                      color: AppColors.ink,
+                      fontWeight: FontWeight.w700)),
               if (p.description.isNotEmpty) ...[
                 const SizedBox(height: 12),
                 Text(p.description,
                     style: const TextStyle(
-                        height: 1.4, color: AppColors.charcoal)),
+                        height: 1.4, color: AppColors.slate)),
               ],
               const SizedBox(height: 20),
 
@@ -157,31 +156,68 @@ class ProductDetailScreen extends StatelessWidget {
 
   Widget _checkoutBar(BuildContext context, ProductDetailViewModel vm) {
     final p = vm.product!;
+    final v = vm.selectedVariant;
+    final canBuy = vm.canCheckout && v != null;
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-        child: ElevatedButton(
-          onPressed: vm.canCheckout
-              ? () {
-                  final v = vm.selectedVariant!;
-                  context.push(
-                    '/customer/checkout',
-                    extra: CheckoutArgs(
-                      variantId: v.id,
-                      quantity: vm.quantity,
-                      productName: p.name,
-                      variantLabel: '${v.colour} · ${v.size}',
-                      unitPrice: p.price,
+        child: !canBuy
+            ? ElevatedButton(
+                onPressed: null,
+                child: Text(v == null
+                    ? 'Select size & colour'
+                    : (v.inStock ? 'Proceed to checkout' : 'Sold out')),
+              )
+            : Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.shopping_bag_outlined, size: 18),
+                      label: const Text('Add to basket'),
+                      style: OutlinedButton.styleFrom(
+                          minimumSize: const Size.fromHeight(48)),
+                      onPressed: () {
+                        context.read<CartViewModel>().add(CartItem(
+                              variantId: v.id,
+                              productName: p.name,
+                              variantLabel: '${v.colour} · ${v.size}',
+                              unitPrice: p.price,
+                              quantity: vm.quantity,
+                              maxQuantity: v.stock,
+                              imagePath: p.imagePath,
+                            ));
+                        ScaffoldMessenger.of(context)
+                          ..hideCurrentSnackBar()
+                          ..showSnackBar(SnackBar(
+                            content: Text('${p.name} added to your basket'),
+                            action: SnackBarAction(
+                              label: 'View basket',
+                              textColor: AppColors.accentOnDark,
+                              onPressed: () => context.push('/customer/cart'),
+                            ),
+                          ));
+                      },
                     ),
-                  );
-                }
-              : null,
-          child: Text(vm.selectedVariant == null
-              ? 'Select size & colour'
-              : (vm.selectedVariant!.inStock
-                  ? 'Proceed to checkout'
-                  : 'Sold out')),
-        ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => context.push(
+                        '/customer/checkout',
+                        extra: CheckoutArgs.single(
+                          variantId: v.id,
+                          quantity: vm.quantity,
+                          productName: p.name,
+                          variantLabel: '${v.colour} · ${v.size}',
+                          unitPrice: p.price,
+                          imagePath: p.imagePath,
+                        ),
+                      ),
+                      child: const Text('Buy now'),
+                    ),
+                  ),
+                ],
+              ),
       ),
     );
   }
@@ -204,17 +240,17 @@ class _Photo extends StatelessWidget {
       aspectRatio: 1,
       child: url == null
           ? Container(
-              color: AppColors.sand,
+              color: AppColors.tint,
               child:
-                  const Icon(Icons.checkroom, size: 64, color: AppColors.olive),
+                  const Icon(Icons.checkroom, size: 64, color: AppColors.ink),
             )
           : Image.network(
               url!,
               fit: BoxFit.cover,
               errorBuilder: (_, __, ___) => Container(
-                color: AppColors.sand,
+                color: AppColors.tint,
                 child: const Icon(Icons.broken_image,
-                    size: 48, color: AppColors.olive),
+                    size: 48, color: AppColors.ink),
               ),
             ),
     );
@@ -234,21 +270,22 @@ class _StockLine extends StatelessWidget {
         hasSize
             ? 'That combination is unavailable.'
             : 'Choose a size to see availability.',
-        style: const TextStyle(color: Colors.grey),
+        style: const TextStyle(color: AppColors.muted),
       );
     }
     if (!variant!.inStock) {
       return const Text('Sold out',
           style: TextStyle(
-              color: AppColors.charcoal, fontWeight: FontWeight.w600));
+              color: AppColors.slate, fontWeight: FontWeight.w600));
     }
     if (variant!.isLow) {
       return Text('Only ${variant!.stock} left',
           style: const TextStyle(
-              color: AppColors.terracotta, fontWeight: FontWeight.w600));
+              color: AppColors.alert, fontWeight: FontWeight.w600));
     }
     return const Text('In stock',
-        style: TextStyle(color: AppColors.olive, fontWeight: FontWeight.w600));
+        style: TextStyle(
+            color: AppColors.statusDelivered, fontWeight: FontWeight.w600));
   }
 }
 

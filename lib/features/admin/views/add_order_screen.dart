@@ -1,24 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/location_picker_map.dart';
+import '../../../core/widgets/product_photo.dart';
 import '../../../shared/models/product.dart';
+import '../../../shared/repositories/order_repository.dart';
 import '../../../shared/repositories/product_repository.dart';
 import '../viewmodels/add_order_viewmodel.dart';
 import 'widgets/admin_format.dart';
 
 /// OWNER: Ahmed (admin). "Add order": the admin types in an order that came
-/// from the shop, Instagram or WhatsApp.
-///
-/// PREVIEW ONLY: the form and the basket work, but saving is switched off
-/// until the database accepts orders from the admin (see AddOrderViewModel).
+/// from the shop, Instagram or WhatsApp, for a customer who has an account.
+/// Saving goes through the database function admin_place_order.
 class AddOrderScreen extends StatelessWidget {
   const AddOrderScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (c) => AddOrderViewModel(c.read<ProductRepository>()),
+      create: (c) => AddOrderViewModel(
+        c.read<ProductRepository>(),
+        c.read<OrderRepository>(),
+      ),
       child: const _AddOrderForm(),
     );
   }
@@ -32,25 +38,19 @@ class _AddOrderForm extends StatefulWidget {
 }
 
 class _AddOrderFormState extends State<_AddOrderForm> {
-  final _name = TextEditingController();
-  final _phone = TextEditingController();
   final _address = TextEditingController();
   final _notes = TextEditingController();
   DateTime? _neededBy;
 
   @override
   void dispose() {
-    _name.dispose();
-    _phone.dispose();
     _address.dispose();
     _notes.dispose();
     super.dispose();
   }
 
   bool _canSave(AddOrderViewModel vm) =>
-      _name.text.trim().isNotEmpty &&
-      _address.text.trim().isNotEmpty &&
-      vm.lines.isNotEmpty;
+      vm.canSave && _address.text.trim().isNotEmpty;
 
   Future<void> _pickDate() async {
     final now = DateTime.now();
@@ -74,24 +74,19 @@ class _AddOrderFormState extends State<_AddOrderForm> {
     );
   }
 
-  void _save() {
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Saving is not switched on yet'),
-        content: const Text(
-          'The database only accepts orders placed by customers. To save an '
-          'order typed in by the admin, the team needs to add that to the '
-          'database first.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
+  Future<void> _save(AddOrderViewModel vm) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final router = GoRouter.of(context);
+    final name = vm.customer?.fullName ?? 'the customer';
+    final id = await vm.save(
+      address: _address.text,
+      neededBy: _neededBy,
+      notes: _notes.text,
     );
+    if (id == null || !mounted) return; // the reason shows on the screen
+    messenger.showSnackBar(SnackBar(content: Text('Order saved for $name')));
+    // Back to the orders list; the new order is already there (live list).
+    router.pop();
   }
 
   @override
@@ -103,35 +98,31 @@ class _AddOrderFormState extends State<_AddOrderForm> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.sand,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Text(
-              'Preview: you can fill this in, but orders cannot be saved yet.',
-            ),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _name,
-            textCapitalization: TextCapitalization.words,
-            decoration: const InputDecoration(labelText: 'Customer name'),
-            onChanged: (_) => setState(() {}),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _phone,
-            keyboardType: TextInputType.phone,
-            decoration: const InputDecoration(labelText: 'Phone (optional)'),
-          ),
+          _CustomerPicker(vm: vm),
           const SizedBox(height: 12),
           TextField(
             controller: _address,
             maxLines: 2,
             decoration: const InputDecoration(labelText: 'Delivery address'),
             onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 16),
+          const Text('Pin the delivery spot (optional)',
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+          const SizedBox(height: 4),
+          Text(
+            vm.lat == null
+                ? 'Tap the map so the rider sees it on their screen.'
+                : 'Location pinned. Tap again to adjust.',
+            style: TextStyle(
+              fontSize: 13,
+              color: vm.lat == null ? AppColors.muted : AppColors.statusDelivered,
+            ),
+          ),
+          const SizedBox(height: 8),
+          LocationPickerMap(
+            onChanged: (LatLng point) =>
+                vm.setLocation(point.latitude, point.longitude),
           ),
           const SizedBox(height: 12),
           OutlinedButton.icon(
@@ -173,11 +164,13 @@ class _AddOrderFormState extends State<_AddOrderForm> {
           else if (vm.error != null)
             Text(vm.error!)
           else if (vm.lines.isEmpty)
-            const Text('No items yet.', style: TextStyle(color: Colors.black54))
+            const Text('No items yet.', style: TextStyle(color: AppColors.muted))
           else ...[
             for (final line in vm.lines)
               ListTile(
                 contentPadding: EdgeInsets.zero,
+                leading:
+                    ProductPhoto(imagePath: line.product.imagePath, size: 44),
                 title: Text(line.product.name),
                 subtitle: Text(
                     '${line.variant.size} · ${line.variant.colour} × ${line.quantity}'),
@@ -204,22 +197,96 @@ class _AddOrderFormState extends State<_AddOrderForm> {
               ],
             ),
           ],
+          if (vm.saveError != null) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.alert.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Text(vm.saveError!,
+                  style: const TextStyle(color: AppColors.alert)),
+            ),
+          ],
         ],
       ),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           color: Colors.white,
-          border: Border(top: BorderSide(color: AppColors.sand)),
+          border: Border(top: BorderSide(color: AppColors.tint)),
         ),
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
             child: ElevatedButton(
-              onPressed: _canSave(vm) ? _save : null,
-              child: const Text('Save order'),
+              onPressed: _canSave(vm) ? () => _save(vm) : null,
+              child: vm.saving
+                  ? const SizedBox(
+                      height: 22,
+                      width: 22,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: AppColors.canvas),
+                    )
+                  : Text(vm.lines.isEmpty
+                      ? 'Save order'
+                      : 'Save order · ${adminMoney.format(vm.total)}'),
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Which registered customer the order is for. The database needs a real
+/// account to attach the order to, so the person has to have signed up.
+class _CustomerPicker extends StatelessWidget {
+  const _CustomerPicker({required this.vm});
+  final AddOrderViewModel vm;
+
+  @override
+  Widget build(BuildContext context) {
+    if (vm.loading) {
+      return const InputDecorator(
+        decoration: InputDecoration(labelText: 'Customer'),
+        child: Text('Loading customers...'),
+      );
+    }
+    if (vm.customers.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.tint,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Text(
+          'No customer accounts yet. A customer has to sign up in the app '
+          'before an order can be added for them.',
+        ),
+      );
+    }
+    return DropdownButtonFormField<String>(
+      isExpanded: true,
+      initialValue: vm.customer?.id,
+      decoration: const InputDecoration(
+        labelText: 'Customer',
+        helperText: 'The customer needs an account in the app',
+      ),
+      items: [
+        for (final c in vm.customers)
+          DropdownMenuItem<String>(
+            value: c.id,
+            child: Text(
+              c.phone == null || c.phone!.isEmpty
+                  ? (c.fullName.isEmpty ? (c.email ?? 'Customer') : c.fullName)
+                  : '${c.fullName.isEmpty ? (c.email ?? 'Customer') : c.fullName}  ·  ${c.phone}',
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+      ],
+      onChanged: (id) => vm.selectCustomer(
+        id == null ? null : vm.customers.firstWhere((c) => c.id == id),
       ),
     );
   }

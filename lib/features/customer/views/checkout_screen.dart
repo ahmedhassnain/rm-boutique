@@ -6,24 +6,74 @@ import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/location_picker_map.dart';
+import '../../../core/widgets/product_photo.dart';
+import '../../../shared/models/cart_line.dart';
 import '../../../shared/repositories/order_repository.dart';
+import '../viewmodels/cart_viewmodel.dart';
 import '../viewmodels/checkout_viewmodel.dart';
 
-/// Data passed from the product detail page into checkout.
-class CheckoutArgs {
-  const CheckoutArgs({
+/// One product line going into checkout.
+class CheckoutLine {
+  const CheckoutLine({
     required this.variantId,
     required this.quantity,
     required this.productName,
     required this.variantLabel,
     required this.unitPrice,
+    this.imagePath,
   });
+
+  factory CheckoutLine.fromCartItem(CartItem i) => CheckoutLine(
+        variantId: i.variantId,
+        quantity: i.quantity,
+        productName: i.productName,
+        variantLabel: i.variantLabel,
+        unitPrice: i.unitPrice,
+        imagePath: i.imagePath,
+      );
 
   final String variantId;
   final int quantity;
   final String productName;
   final String variantLabel; // e.g. "Olive · M"
   final double unitPrice;
+  final String? imagePath; // product photo, shown in the summary
+
+  double get lineTotal => unitPrice * quantity;
+}
+
+/// Data passed into checkout: from the product page ("Buy now", one line) or
+/// from the basket (several lines, and the basket is emptied after the order).
+class CheckoutArgs {
+  const CheckoutArgs({required this.lines, this.fromCart = false});
+
+  /// "Buy now" on the product page: a single line.
+  CheckoutArgs.single({
+    required String variantId,
+    required int quantity,
+    required String productName,
+    required String variantLabel,
+    required double unitPrice,
+    String? imagePath,
+  })  : lines = [
+          CheckoutLine(
+            variantId: variantId,
+            quantity: quantity,
+            productName: productName,
+            variantLabel: variantLabel,
+            unitPrice: unitPrice,
+            imagePath: imagePath,
+          ),
+        ],
+        fromCart = false;
+
+  /// "Checkout" in the basket.
+  CheckoutArgs.fromCart(this.lines) : fromCart = true;
+
+  final List<CheckoutLine> lines;
+  final bool fromCart;
+
+  double get total => lines.fold(0, (sum, l) => sum + l.lineTotal);
 }
 
 /// OWNER: Maheen.
@@ -55,8 +105,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Widget build(BuildContext context) {
     final a = widget.args;
     return ChangeNotifierProvider(
-      create: (c) =>
-          CheckoutViewModel(c.read<OrderRepository>(), a.variantId, a.quantity),
+      create: (c) => CheckoutViewModel(c.read<OrderRepository>(), [
+        for (final l in a.lines)
+          CartLine(variantId: l.variantId, quantity: l.quantity),
+      ]),
       child: Consumer<CheckoutViewModel>(
         builder: (context, vm, _) {
           return Scaffold(
@@ -91,7 +143,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         : 'Location pinned ✓  Tap again to adjust.',
                     style: TextStyle(
                       fontSize: 13,
-                      color: vm.lat == null ? Colors.grey : AppColors.olive,
+                      color: vm.lat == null ? Colors.grey : AppColors.statusDelivered,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -124,11 +176,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: AppColors.terracotta.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        color: AppColors.alert.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(16),
                       ),
                       child: Text(vm.error!,
-                          style: const TextStyle(color: AppColors.terracotta)),
+                          style: const TextStyle(color: AppColors.alert)),
                     ),
                   ],
                 ],
@@ -144,10 +196,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           height: 22,
                           width: 22,
                           child: CircularProgressIndicator(
-                              strokeWidth: 2, color: AppColors.ivory),
+                              strokeWidth: 2, color: AppColors.canvas),
                         )
-                      : Text(
-                          'Place order · ${_price.format(a.unitPrice * a.quantity)}'),
+                      : Text('Place order · ${_price.format(a.total)}'),
                 ),
               ),
             ),
@@ -161,25 +212,47 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(14),
-        child: Row(
+        child: Column(
           children: [
-            const Icon(Icons.checkroom, color: AppColors.olive),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            for (final l in a.lines)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  children: [
+                    ProductPhoto(imagePath: l.imagePath, size: 52),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(l.productName,
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 2),
+                          Text('${l.variantLabel}  ·  Qty ${l.quantity}',
+                              style: const TextStyle(color: AppColors.muted)),
+                        ],
+                      ),
+                    ),
+                    Text(_price.format(l.lineTotal),
+                        style: const TextStyle(
+                            color: AppColors.ink, fontWeight: FontWeight.w700)),
+                  ],
+                ),
+              ),
+            if (a.lines.length > 1) ...[
+              const Divider(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(a.productName,
-                      style: const TextStyle(fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 2),
-                  Text('${a.variantLabel}  ·  Qty ${a.quantity}',
-                      style: const TextStyle(color: Colors.grey)),
+                  const Text('Total',
+                      style: TextStyle(fontWeight: FontWeight.w700)),
+                  Text(_price.format(a.total),
+                      style: const TextStyle(
+                          color: AppColors.ink, fontWeight: FontWeight.w700)),
                 ],
               ),
-            ),
-            Text(_price.format(a.unitPrice * a.quantity),
-                style: const TextStyle(
-                    color: AppColors.terracotta, fontWeight: FontWeight.w600)),
+            ],
           ],
         ),
       ),
@@ -202,6 +275,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final id = await vm.submit(address: _address.text, notes: _notes.text);
     if (!context.mounted) return;
     if (id != null) {
+      // An order placed from the basket empties it.
+      if (widget.args.fromCart) context.read<CartViewModel>().clear();
       await showDialog<void>(
         context: context,
         builder: (_) => AlertDialog(
@@ -246,7 +321,7 @@ class _DateField extends StatelessWidget {
         : DateFormat('EEE, d MMM yyyy').format(date!);
     return InkWell(
       onTap: onPick,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(16),
       child: InputDecorator(
         decoration: InputDecoration(
           prefixIcon: const Icon(Icons.calendar_today, size: 18),
@@ -256,7 +331,7 @@ class _DateField extends StatelessWidget {
         ),
         child: Text(label,
             style: TextStyle(
-                color: date == null ? Colors.grey : AppColors.charcoal)),
+                color: date == null ? AppColors.muted : AppColors.slate)),
       ),
     );
   }

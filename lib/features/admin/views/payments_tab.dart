@@ -91,25 +91,25 @@ class _PaymentCard extends StatelessWidget {
     final Color colour;
     if (p == null) {
       label = 'No receipt';
-      colour = Colors.black54;
+      colour = AppColors.muted;
     } else if (p.verified) {
       label = 'Verified';
-      colour = AppColors.olive;
+      colour = AppColors.statusDelivered;
     } else if (p.flagged) {
       label = 'Flagged';
-      colour = AppColors.terracotta;
+      colour = AppColors.alert;
     } else {
       label = 'To review';
-      colour = const Color(0xFF8A6D1F);
+      colour = AppColors.statusPaid;
     }
 
     return Material(
       color: Colors.white,
       clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: const BorderSide(color: AppColors.sand, width: 1.5),
-      ),
+      elevation: 2,
+      shadowColor: AppSurface.shadowColor,
+      surfaceTintColor: Colors.transparent,
+      shape: AppSurface.card(),
       child: InkWell(
         onTap: () => context.push('/admin/order/${order.id}'),
         child: Padding(
@@ -121,11 +121,11 @@ class _PaymentCard extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: AppColors.ivory,
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: AppColors.sand),
+                  color: AppColors.canvas,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.tint),
                 ),
-                child: const Icon(Icons.receipt_long, color: AppColors.olive),
+                child: const Icon(Icons.receipt_long, color: AppColors.ink),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -149,7 +149,7 @@ class _PaymentCard extends StatelessWidget {
                         'Receipt shows ${adminMoney.format(amount)}',
                         style: TextStyle(
                           fontSize: 12,
-                          color: mismatch ? AppColors.terracotta : Colors.black54,
+                          color: mismatch ? AppColors.alert : AppColors.muted,
                           fontWeight:
                               mismatch ? FontWeight.w600 : FontWeight.normal,
                         ),
@@ -158,7 +158,7 @@ class _PaymentCard extends StatelessWidget {
                       const Text(
                         'Amount does not match the order total',
                         style: TextStyle(
-                            fontSize: 12, color: AppColors.terracotta),
+                            fontSize: 12, color: AppColors.alert),
                       ),
                   ],
                 ),

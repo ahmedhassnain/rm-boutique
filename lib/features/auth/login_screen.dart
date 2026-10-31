@@ -47,11 +47,26 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('R&M Boutique', textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 4),
-                  const Text('Sign in', textAlign: TextAlign.center),
-                  const SizedBox(height: 24),
+                  // The brand logo (assets/images/logo.png). Until the file is
+                  // added, the boutique name is shown as text instead.
+                  Image.asset(
+                    'assets/images/logo.png',
+                    height: 150,
+                    fit: BoxFit.contain,
+                    semanticLabel: 'R&M Boutique',
+                    errorBuilder: (_, __, ___) => Text('R&M Boutique',
+                        textAlign: TextAlign.center,
+                        style: AppTheme.display(size: 44)),
+                  ),
+                  const SizedBox(height: 12),
+                  Text('Sign in',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.ink,
+                          )),
+                  const SizedBox(height: 28),
                   TextField(controller: _email, keyboardType: TextInputType.emailAddress,
                       decoration: const InputDecoration(labelText: 'Email')),
                   const SizedBox(height: 12),
@@ -59,12 +74,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       decoration: const InputDecoration(labelText: 'Password')),
                   if (_error != null) ...[
                     const SizedBox(height: 12),
-                    Text(_error!, style: const TextStyle(color: AppColors.terracotta)),
+                    Text(_error!, style: const TextStyle(color: AppColors.alert)),
                   ],
                   const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: _busy ? null : _submit,
-                    child: _busy ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Sign in'),
+                    child: _busy ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Sign in'),
                   ),
                   TextButton(onPressed: () => context.go('/register'), child: const Text('Create a customer account')),
                 ],

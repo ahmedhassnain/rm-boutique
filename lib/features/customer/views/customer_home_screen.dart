@@ -6,10 +6,12 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/role_scaffold.dart';
 import '../../../features/auth/auth_controller.dart';
+import '../../../features/chat/chat_button.dart';
 import '../../../shared/models/product.dart';
 import '../../../shared/repositories/product_repository.dart';
 import '../../../shared/repositories/storage_repository.dart';
 import '../viewmodels/products_viewmodel.dart';
+import 'cart_screen.dart';
 
 /// OWNER: Maheen.
 /// Customer main page (matches the Part 1 wireframe): a search bar with a
@@ -26,6 +28,7 @@ class CustomerHomeScreen extends StatelessWidget {
       child: const RoleScaffold(
         title: 'R&M Boutique',
         bottomNavigationBar: _CustomerBottomBar(),
+        actions: [BasketButton(), ChatButton()],
         body: _Catalogue(),
       ),
     );
@@ -140,7 +143,7 @@ class _Header extends StatelessWidget {
                       },
                     ),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(16),
               ),
             ),
           ),
@@ -186,8 +189,9 @@ class _SortDropdown extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade400),
-        borderRadius: BorderRadius.circular(12),
+        color: Colors.white,
+        border: Border.all(color: AppColors.hairline),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<ProductSort>(
@@ -195,7 +199,7 @@ class _SortDropdown extends StatelessWidget {
           icon: const Icon(Icons.sort),
           isDense: true,
           isExpanded: true,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           onChanged: (v) {
             if (v != null) vm.setSort(v);
           },
@@ -224,7 +228,7 @@ class _ProductCard extends StatelessWidget {
 
     return Card(
       clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         onTap: () => context.push('/customer/product/${product.id}'),
         child: Column(
@@ -260,8 +264,8 @@ class _ProductCard extends StatelessWidget {
                   Text(
                     _price.format(product.price),
                     style: const TextStyle(
-                      color: AppColors.terracotta,
-                      fontWeight: FontWeight.w600,
+                      color: AppColors.ink,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: 6),
@@ -286,14 +290,15 @@ class _CategoryLabel extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        border: Border.all(color: AppColors.olive.withValues(alpha: 0.4)),
+        color: AppColors.tint,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
         text,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: const TextStyle(fontSize: 10, color: AppColors.olive),
+        style: const TextStyle(
+            fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.ink),
       ),
     );
   }
@@ -307,19 +312,19 @@ class _Photo extends StatelessWidget {
   Widget build(BuildContext context) {
     if (url == null) {
       return Container(
-        color: AppColors.sand,
-        child: const Icon(Icons.checkroom, size: 40, color: AppColors.olive),
+        color: AppColors.tint,
+        child: const Icon(Icons.checkroom, size: 40, color: AppColors.ink),
       );
     }
     return Image.network(
       url!,
       fit: BoxFit.cover,
       errorBuilder: (_, __, ___) => Container(
-        color: AppColors.sand,
-        child: const Icon(Icons.broken_image, size: 36, color: AppColors.olive),
+        color: AppColors.tint,
+        child: const Icon(Icons.broken_image, size: 36, color: AppColors.ink),
       ),
       loadingBuilder: (context, child, progress) =>
-          progress == null ? child : Container(color: AppColors.sand),
+          progress == null ? child : Container(color: AppColors.tint),
     );
   }
 }
@@ -334,10 +339,10 @@ class _StockBadge extends StatelessWidget {
     final Color colour;
     if (stock <= 0) {
       label = 'Sold out';
-      colour = AppColors.charcoal;
+      colour = AppColors.ink;
     } else if (stock <= 3) {
       label = 'Only $stock left';
-      colour = AppColors.terracotta;
+      colour = AppColors.alert;
     } else {
       return const SizedBox.shrink();
     }
@@ -345,12 +350,12 @@ class _StockBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: colour,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(10),
       ),
       child: Text(
         label,
         style: const TextStyle(
-          color: AppColors.ivory,
+          color: AppColors.canvas,
           fontSize: 11,
           fontWeight: FontWeight.w600,
         ),
@@ -401,11 +406,19 @@ class _CustomerBottomBar extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.person, color: AppColors.olive),
+              leading: const Icon(Icons.person, color: AppColors.ink),
               title: Text(auth.profile?.fullName ?? 'My account'),
               subtitle: const Text('Signed in as a customer'),
             ),
             const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.chat_bubble_outline),
+              title: const Text('Message the boutique'),
+              onTap: () {
+                Navigator.of(sheetContext).pop();
+                context.push('/customer/chat');
+              },
+            ),
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('Sign out'),

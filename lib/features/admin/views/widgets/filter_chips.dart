@@ -30,11 +30,11 @@ class FilterChips<T> extends StatelessWidget {
       button: true,
       selected: isSelected,
       child: Material(
-        color: isSelected ? AppColors.sand : Colors.white,
+        color: isSelected ? AppColors.ink : Colors.white,
         clipBehavior: Clip.antiAlias,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-          side: const BorderSide(color: AppColors.charcoal),
+        shape: StadiumBorder(
+          side: BorderSide(
+              color: isSelected ? AppColors.ink : AppColors.hairline),
         ),
         child: InkWell(
           onTap: () => onSelected(option),
@@ -47,6 +47,7 @@ class FilterChips<T> extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  color: isSelected ? Colors.white : AppColors.slate,
                 ),
               ),
             ),
@@ -59,11 +60,15 @@ class FilterChips<T> extends StatelessWidget {
   Widget _chip(T option) => ChoiceChip(
         label: Text(labelOf(option)),
         selected: option == selected,
+        labelStyle: TextStyle(
+          fontWeight: FontWeight.w500,
+          color: option == selected ? Colors.white : AppColors.slate,
+        ),
         showCheckmark: false,
-        selectedColor: AppColors.sand,
+        selectedColor: AppColors.ink,
         backgroundColor: Colors.white,
-        side: const BorderSide(color: AppColors.charcoal),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        side: const BorderSide(color: AppColors.hairline),
+        shape: const StadiumBorder(),
         onSelected: (_) => onSelected(option),
       );
 

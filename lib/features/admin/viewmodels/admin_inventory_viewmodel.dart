@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../shared/models/product.dart';
 import '../../../shared/repositories/product_repository.dart';
+import '../../../shared/repositories/storage_repository.dart';
 
 /// One size/colour that needs restocking, together with its product.
 class StockAlert {
@@ -41,7 +42,8 @@ enum AdminStockFilter {
 /// does that inside place_order). The live stream below makes that change
 /// show up here without a refresh.
 class AdminInventoryViewModel extends ChangeNotifier {
-  AdminInventoryViewModel(this._products) {
+  AdminInventoryViewModel(this._products, {StorageRepository? storage})
+      : _storage = storage {
     load();
     var first = true;
     _sub = _products.watchVariants().listen(
@@ -57,6 +59,7 @@ class AdminInventoryViewModel extends ChangeNotifier {
   }
 
   final ProductRepository _products;
+  final StorageRepository? _storage;
   StreamSubscription<dynamic>? _sub;
   bool _disposed = false;
   int _loadCounter = 0;
@@ -71,6 +74,9 @@ class AdminInventoryViewModel extends ChangeNotifier {
   /// Id of the size/colour being saved right now (to disable its buttons).
   String? savingVariantId;
   String? actionError;
+
+  /// Id of the product whose photo is being uploaded right now.
+  String? savingPhotoProductId;
 
   Future<void> load({bool silent = false}) async {
     final myLoad = ++_loadCounter;
@@ -132,6 +138,40 @@ class AdminInventoryViewModel extends ChangeNotifier {
       }
     }
     return result;
+  }
+
+  /// Replaces a product's photo with [bytes] (already compressed by
+  /// pickCompressedImage). Uploads the new file, points the product at it,
+  /// then removes the old file. Returns true when it worked.
+  Future<bool> changePhoto(Product product, Uint8List bytes) async {
+    final storage = _storage;
+    if (storage == null || savingPhotoProductId != null) return false;
+    savingPhotoProductId = product.id;
+    actionError = null;
+    _notify();
+    try {
+      final newPath = await storage.uploadProductImage(product.id, bytes);
+      await _products.setImagePath(product.id, newPath);
+      final old = product.imagePath;
+      if (old != null && old.isNotEmpty && old != newPath) {
+        try {
+          await storage.deleteProductImage(old);
+        } catch (_) {
+          // The new photo is saved; a leftover old file is harmless.
+        }
+      }
+      await load(silent: true);
+      return true;
+    } on PostgrestException catch (e) {
+      actionError = e.message;
+      return false;
+    } catch (_) {
+      actionError = 'Could not upload the photo. Check your connection and try again.';
+      return false;
+    } finally {
+      savingPhotoProductId = null;
+      _notify();
+    }
   }
 
   /// Saves a corrected stock number. Returns true when it worked.

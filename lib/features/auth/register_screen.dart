@@ -66,12 +66,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   TextField(controller: _password, obscureText: true, decoration: const InputDecoration(labelText: 'Password')),
                   if (_error != null) ...[
                     const SizedBox(height: 12),
-                    Text(_error!, style: const TextStyle(color: AppColors.terracotta)),
+                    Text(_error!, style: const TextStyle(color: AppColors.alert)),
                   ],
                   const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: _busy ? null : _submit,
-                    child: _busy ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Create account'),
+                    child: _busy ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Create account'),
                   ),
                 ],
               ),
