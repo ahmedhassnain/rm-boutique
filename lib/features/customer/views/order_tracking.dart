@@ -45,7 +45,7 @@ class OrderTracking extends StatelessWidget {
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading:
-                    const Icon(Icons.delivery_dining, color: AppColors.olive),
+                    const Icon(Icons.delivery_dining, color: AppColors.ink),
                 title: Text(order.riderName ?? 'Rider assigned'),
                 subtitle: Text(order.riderPhone ?? 'Your rider'),
               ),
@@ -62,7 +62,7 @@ class OrderTracking extends StatelessWidget {
               if (deliveryUrl != null) ...[
                 const SizedBox(height: 10),
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(16),
                   child: Image.network(
                     deliveryUrl!,
                     height: 180,
@@ -98,7 +98,7 @@ class _Step extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colour = done ? AppColors.olive : Colors.grey.shade400;
+    final colour = done ? AppColors.ink : AppColors.hairline;
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -121,7 +121,7 @@ class _Step extends StatelessWidget {
                       style: TextStyle(
                           fontWeight:
                               isCurrent ? FontWeight.w700 : FontWeight.w500,
-                          color: done ? null : Colors.grey)),
+                          color: done ? null : AppColors.muted)),
                   if (isCurrent)
                     Text(hint, style: const TextStyle(fontSize: 12)),
                 ],

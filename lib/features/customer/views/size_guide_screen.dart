@@ -49,12 +49,12 @@ class SizeGuideScreen extends StatelessWidget {
   Widget _table() {
     const headStyle = TextStyle(fontWeight: FontWeight.w600);
     return Table(
-      border: TableBorder.all(color: AppColors.sand, width: 1),
+      border: TableBorder.all(color: AppColors.tint, width: 1),
       columnWidths: const {0: FixedColumnWidth(64)},
       defaultVerticalAlignment: TableCellVerticalAlignment.middle,
       children: [
         const TableRow(
-          decoration: BoxDecoration(color: AppColors.sand),
+          decoration: BoxDecoration(color: AppColors.tint),
           children: [
             _Cell('Size', style: headStyle),
             _Cell('Bust', style: headStyle),
@@ -94,7 +94,7 @@ class _Tip extends StatelessWidget {
         padding: const EdgeInsets.only(bottom: 10),
         child: RichText(
           text: TextSpan(
-            style: const TextStyle(color: AppColors.charcoal, height: 1.4),
+            style: const TextStyle(color: AppColors.slate, height: 1.4),
             children: [
               TextSpan(
                   text: '$title — ',

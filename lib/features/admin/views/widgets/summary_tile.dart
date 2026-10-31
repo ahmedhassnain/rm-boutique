@@ -25,10 +25,10 @@ class SummaryTile extends StatelessWidget {
     return Material(
       color: Colors.white,
       clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: const BorderSide(color: AppColors.sand, width: 1.5),
-      ),
+      elevation: 2,
+      shadowColor: AppSurface.shadowColor,
+      surfaceTintColor: Colors.transparent,
+      shape: AppSurface.card(),
       child: InkWell(
         onTap: onTap,
         child: SizedBox(
@@ -43,7 +43,7 @@ class SummaryTile extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w700,
-                    color: warn ? AppColors.terracotta : AppColors.olive,
+                    color: warn ? AppColors.alert : AppColors.ink,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -51,7 +51,7 @@ class SummaryTile extends StatelessWidget {
                   label,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 12, color: Colors.black54),
+                  style: const TextStyle(fontSize: 12, color: AppColors.muted),
                 ),
               ],
             ),

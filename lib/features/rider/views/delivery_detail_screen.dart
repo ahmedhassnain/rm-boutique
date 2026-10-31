@@ -5,7 +5,9 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/boutique_location.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/product_photo.dart';
 import '../../../core/widgets/status_chip.dart';
 import '../../../shared/models/order.dart';
 import '../../../shared/repositories/order_repository.dart';
@@ -53,7 +55,7 @@ class DeliveryDetailScreen extends StatelessWidget {
                             NumberFormat.currency(symbol: '₪', decimalDigits: 0)
                                 .format(o.total),
                             style: const TextStyle(
-                                color: AppColors.olive,
+                                color: AppColors.ink,
                                 fontWeight: FontWeight.w700),
                           ),
                           const SizedBox(height: 16),
@@ -64,9 +66,25 @@ class DeliveryDetailScreen extends StatelessWidget {
                             notes: o.notes,
                             neededBy: o.neededBy,
                           ),
+                          // Step 1 for the rider: collect the order at the shop.
+                          const SizedBox(height: 16),
+                          _MapCard(
+                            title: 'Pickup: $kBoutiqueName',
+                            lat: kBoutiqueLatLng.latitude,
+                            lng: kBoutiqueLatLng.longitude,
+                            pinColor: AppColors.ink,
+                            buttonLabel: 'Navigate to pickup',
+                          ),
+                          // Step 2: deliver it to the customer's pin.
                           if (o.hasLocation) ...[
                             const SizedBox(height: 16),
-                            _MapCard(lat: o.addressLat!, lng: o.addressLng!),
+                            _MapCard(
+                              title: 'Delivery: ${o.customerName ?? 'Customer'}',
+                              lat: o.addressLat!,
+                              lng: o.addressLng!,
+                              pinColor: AppColors.alert,
+                              buttonLabel: 'Navigate to customer',
+                            ),
                           ],
                           const SizedBox(height: 16),
                           _ItemsCard(order: o),
@@ -131,7 +149,7 @@ class _ContactCard extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.location_on, size: 18, color: AppColors.olive),
+                const Icon(Icons.location_on, size: 18, color: AppColors.ink),
                 const SizedBox(width: 6),
                 Expanded(child: Text(address)),
               ],
@@ -140,7 +158,7 @@ class _ContactCard extends StatelessWidget {
               const SizedBox(height: 6),
               Row(
                 children: [
-                  const Icon(Icons.event, size: 18, color: AppColors.olive),
+                  const Icon(Icons.event, size: 18, color: AppColors.ink),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
@@ -158,7 +176,7 @@ class _ContactCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Icon(Icons.sticky_note_2_outlined,
-                      size: 18, color: AppColors.olive),
+                      size: 18, color: AppColors.ink),
                   const SizedBox(width: 6),
                   Expanded(child: Text(notes!)),
                 ],
@@ -171,10 +189,22 @@ class _ContactCard extends StatelessWidget {
   }
 }
 
+/// A small map with one pin, its coordinates in text, and a button that opens
+/// turn-by-turn directions. Used for the pickup (the shop) and the delivery
+/// (the customer's pin).
 class _MapCard extends StatelessWidget {
-  const _MapCard({required this.lat, required this.lng});
+  const _MapCard({
+    required this.title,
+    required this.lat,
+    required this.lng,
+    required this.pinColor,
+    required this.buttonLabel,
+  });
+  final String title;
   final double lat;
   final double lng;
+  final Color pinColor;
+  final String buttonLabel;
 
   Future<void> _navigate(BuildContext context) async {
     final uri = Uri.parse(
@@ -192,7 +222,20 @@ class _MapCard extends StatelessWidget {
     return Card(
       clipBehavior: Clip.antiAlias,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+                const SizedBox(height: 2),
+                Text('Coordinates: ${formatCoordinates(lat, lng)}',
+                    style: const TextStyle(color: AppColors.muted, fontSize: 12)),
+              ],
+            ),
+          ),
           SizedBox(
             height: 160,
             child: IgnorePointer(
@@ -210,8 +253,7 @@ class _MapCard extends StatelessWidget {
                       point: point,
                       width: 36,
                       height: 36,
-                      child: const Icon(Icons.location_pin,
-                          color: AppColors.terracotta, size: 36),
+                      child: Icon(Icons.location_pin, color: pinColor, size: 36),
                     ),
                   ]),
                 ],
@@ -223,7 +265,7 @@ class _MapCard extends StatelessWidget {
             child: TextButton.icon(
               onPressed: () => _navigate(context),
               icon: const Icon(Icons.directions),
-              label: const Text('Navigate'),
+              label: Text(buttonLabel),
             ),
           ),
         ],
@@ -251,6 +293,7 @@ class _ItemsCard extends StatelessWidget {
             for (final i in order.items)
               ListTile(
                 dense: true,
+                leading: ProductPhoto(imagePath: i.imagePath, size: 40),
                 title: Text(i.productName ?? 'Item'),
                 subtitle: Text('${i.size ?? ''} ${i.colour ?? ''}'.trim()),
                 trailing: Text('× ${i.quantity}'),
@@ -277,7 +320,7 @@ class _DeliveryProofCard extends StatelessWidget {
           children: [
             Row(children: [
               Icon(delivered ? Icons.verified : Icons.camera_alt,
-                  color: delivered ? AppColors.olive : AppColors.terracotta),
+                  color: delivered ? AppColors.statusDelivered : AppColors.alert),
               const SizedBox(width: 8),
               Text(delivered ? 'Delivered' : 'Proof of delivery',
                   style: const TextStyle(fontWeight: FontWeight.w700)),
@@ -289,7 +332,7 @@ class _DeliveryProofCard extends StatelessWidget {
             if (vm.deliveryPhotoUrl != null) ...[
               const SizedBox(height: 12),
               ClipRRect(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(16),
                 child: Image.network(
                   vm.deliveryPhotoUrl!,
                   height: 180,
@@ -303,7 +346,7 @@ class _DeliveryProofCard extends StatelessWidget {
             ],
             if (vm.error != null) ...[
               const SizedBox(height: 8),
-              Text(vm.error!, style: const TextStyle(color: AppColors.terracotta)),
+              Text(vm.error!, style: const TextStyle(color: AppColors.alert)),
             ],
             if (vm.canMarkDelivered) ...[
               const SizedBox(height: 12),
@@ -328,7 +371,7 @@ class _DeliveryProofCard extends StatelessWidget {
               Text(
                 'This order is ${vm.order!.status.label.toLowerCase()} — it needs '
                 'to be Dispatched before it can be marked delivered.',
-                style: const TextStyle(color: Colors.black54, fontSize: 12),
+                style: const TextStyle(color: AppColors.muted, fontSize: 12),
               ),
             ],
           ],

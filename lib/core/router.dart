@@ -4,9 +4,13 @@ import 'package:go_router/go_router.dart';
 import '../features/admin/views/add_order_screen.dart';
 import '../features/admin/views/admin_home_screen.dart';
 import '../features/admin/views/admin_order_detail_screen.dart';
+import '../features/admin/views/product_form_screen.dart';
+import '../shared/models/product.dart';
 import '../features/auth/auth_controller.dart';
+import '../features/chat/chat_screen.dart';
 import '../features/auth/login_screen.dart';
 import '../features/auth/register_screen.dart';
+import '../features/customer/views/cart_screen.dart';
 import '../features/customer/views/checkout_screen.dart';
 import '../features/customer/views/customer_home_screen.dart';
 import '../features/customer/views/my_orders_screen.dart';
@@ -56,6 +60,29 @@ GoRouter buildRouter(AuthController auth) {
                 AdminOrderDetailScreen(orderId: state.pathParameters['id']!),
           ),
           GoRoute(path: 'add-order', builder: (_, __) => const AddOrderScreen()),
+          // New product (no extra) or Edit details (the Product as extra).
+          GoRoute(
+            path: 'product',
+            builder: (_, state) => ProductFormScreen(
+              product: state.extra is Product ? state.extra as Product : null,
+            ),
+          ),
+          // One customer's conversation, opened from the Inbox. The customer's
+          // name and role travel along as `extra` (a ChatRouteArgs).
+          GoRoute(
+            path: 'chat/:memberId',
+            builder: (_, state) {
+              final args = state.extra is ChatRouteArgs
+                  ? state.extra as ChatRouteArgs
+                  : null;
+              return ChatScreen(
+                memberId: state.pathParameters['memberId']!,
+                asAdmin: true,
+                isRider: args?.isRider ?? false,
+                title: args?.name ?? 'Conversation',
+              );
+            },
+          ),
         ],
       ),
       GoRoute(
@@ -75,7 +102,17 @@ GoRouter buildRouter(AuthController auth) {
             builder: (_, state) =>
                 CheckoutScreen(args: state.extra as CheckoutArgs),
           ),
+          GoRoute(path: 'cart', builder: (_, __) => const CartScreen()),
           GoRoute(path: 'orders', builder: (_, __) => const MyOrdersScreen()),
+          // The customer's own conversation with the boutique.
+          GoRoute(
+            path: 'chat',
+            builder: (_, __) => ChatScreen(
+              memberId: auth.profile!.id,
+              asAdmin: false,
+              title: 'Message R&M Boutique',
+            ),
+          ),
           GoRoute(
             path: 'order/:id',
             builder: (_, state) =>
@@ -87,6 +124,16 @@ GoRouter buildRouter(AuthController auth) {
         path: '/rider',
         builder: (_, __) => const RiderHomeScreen(),
         routes: [
+          // The rider's own conversation with the boutique.
+          GoRoute(
+            path: 'chat',
+            builder: (_, __) => ChatScreen(
+              memberId: auth.profile!.id,
+              asAdmin: false,
+              isRider: true,
+              title: 'Message R&M Boutique',
+            ),
+          ),
           // Ahmad: add rider screens here
           GoRoute(
             path: 'delivery/:id',

@@ -57,12 +57,18 @@ class StorageRepository {
     await _db.from('orders').update({'status': 'delivered'}).eq('id', orderId);
   }
 
-  /// Admin: upload or replace a product photo, returns the stored path
-  /// to save in products.image_path.
+  /// Admin: upload a product photo, returns the stored path to save in
+  /// products.image_path. Every upload gets a NEW file name, so phones and
+  /// browsers that cached the old picture fetch the new one straight away.
   Future<String> uploadProductImage(String productId, Uint8List bytes) async {
-    final path = '$productId/main.jpg';
+    final path = '$productId/${DateTime.now().millisecondsSinceEpoch}.jpg';
     await _db.storage.from('product-images').uploadBinary(path, bytes, fileOptions: _jpeg);
     return path;
+  }
+
+  /// Admin: removes an old product photo that has been replaced.
+  Future<void> deleteProductImage(String path) async {
+    await _db.storage.from('product-images').remove([path]);
   }
 
   /// Public link for a product photo (bucket is public).

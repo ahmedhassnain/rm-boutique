@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/photo_source_sheet.dart';
+import '../../../core/widgets/product_photo.dart';
 import '../../../shared/models/product.dart';
 import '../viewmodels/admin_inventory_viewmodel.dart';
 import 'widgets/admin_format.dart';
@@ -44,7 +47,7 @@ class InventoryTab extends StatelessWidget {
                   if (vm.actionError != null) ...[
                     const SizedBox(height: 12),
                     Text(vm.actionError!,
-                        style: const TextStyle(color: AppColors.terracotta)),
+                        style: const TextStyle(color: AppColors.alert)),
                   ],
                 ],
               ),
@@ -107,10 +110,10 @@ class _ProductCard extends StatelessWidget {
     return Material(
       color: Colors.white,
       clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: const BorderSide(color: AppColors.sand, width: 1.5),
-      ),
+      elevation: 2,
+      shadowColor: AppSurface.shadowColor,
+      surfaceTintColor: Colors.transparent,
+      shape: AppSurface.card(),
       child: Theme(
         // Removes the default divider lines of ExpansionTile.
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -118,20 +121,110 @@ class _ProductCard extends StatelessWidget {
           key: PageStorageKey<String>('stock-${product.id}'),
           tilePadding: const EdgeInsets.symmetric(horizontal: 12),
           childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+          leading: ProductPhoto(imagePath: product.imagePath, size: 48),
           title: Text(product.name,
               style: const TextStyle(fontWeight: FontWeight.w700)),
           subtitle: Text(
             '${product.category}  ·  ${adminMoney.format(product.price)}  ·  '
-            '${product.totalStock} in stock',
+            '${product.totalStock} in stock'
+            '${product.isActive ? '' : '  ·  Hidden'}',
           ),
           trailing: needsRestock
               ? const Icon(Icons.warning_amber_rounded,
-                  color: AppColors.terracotta)
+                  color: AppColors.alert)
               : const Icon(Icons.expand_more),
           children: [
+            _DetailsRow(product: product),
+            _PhotoRow(product: product),
             for (final v in variants) _VariantRow(variant: v),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// "Edit details": name, category, price, description and visibility.
+class _DetailsRow extends StatelessWidget {
+  const _DetailsRow({required this.product});
+  final Product product;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          const Expanded(
+            child:
+                Text('Details', style: TextStyle(fontWeight: FontWeight.w600)),
+          ),
+          OutlinedButton.icon(
+            onPressed: () async {
+              final vm = context.read<AdminInventoryViewModel>();
+              final saved =
+                  await context.push<bool>('/admin/product', extra: product);
+              if (saved == true) vm.load(silent: true);
+            },
+            icon: const Icon(Icons.edit_outlined, size: 18),
+            label: const Text('Edit details'),
+            style: OutlinedButton.styleFrom(minimumSize: const Size(0, 40)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// "Change photo": the admin picks a picture from the gallery or the camera
+/// and it becomes the product's photo for every customer.
+class _PhotoRow extends StatelessWidget {
+  const _PhotoRow({required this.product});
+  final Product product;
+
+  Future<void> _change(BuildContext context) async {
+    final vm = context.read<AdminInventoryViewModel>();
+    final messenger = ScaffoldMessenger.of(context);
+    final bytes = await pickPhotoWithSheet(context);
+    if (bytes == null) return; // cancelled
+    final ok = await vm.changePhoto(product, bytes);
+    if (ok) {
+      messenger.showSnackBar(
+          SnackBar(content: Text('Photo updated for ${product.name}')));
+    }
+    // On failure the reason is shown at the top of the list (actionError).
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final vm = context.watch<AdminInventoryViewModel>();
+    final busy = vm.savingPhotoProductId == product.id;
+    final hasPhoto = product.imagePath != null && product.imagePath!.isNotEmpty;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          const Expanded(
+            child: Text('Photo', style: TextStyle(fontWeight: FontWeight.w600)),
+          ),
+          OutlinedButton.icon(
+            onPressed:
+                busy || vm.savingPhotoProductId != null ? null : () => _change(context),
+            icon: busy
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.add_a_photo_outlined, size: 18),
+            label: Text(busy
+                ? 'Uploading'
+                : hasPhoto
+                    ? 'Change photo'
+                    : 'Add photo'),
+            style: OutlinedButton.styleFrom(minimumSize: const Size(0, 40)),
+          ),
+        ],
       ),
     );
   }
@@ -171,8 +264,8 @@ class _VariantRow extends StatelessWidget {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
-                      color: AppColors.terracotta,
-                      borderRadius: BorderRadius.circular(10),
+                      color: AppColors.alert,
+                      borderRadius: BorderRadius.circular(14),
                     ),
                     child: Text(badge,
                         style: const TextStyle(

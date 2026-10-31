@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../shared/models/order.dart';
+import 'product_photo.dart';
 import 'status_chip.dart';
 
 /// Live list of orders. Works for every role, because the database only
@@ -43,6 +44,7 @@ class _OrdersFeedState extends State<OrdersFeed> {
             final o = orders[i];
             return Card(
               child: ListTile(
+                leading: OrderThumb(orderId: o.id),
                 onTap: widget.onTap == null ? null : () => widget.onTap!(o),
                 title: Text('Order ${o.id.substring(0, 8)}  ·  ${NumberFormat.currency(symbol: '₪', decimalDigits: 0).format(o.total)}'),
                 subtitle: Text(o.deliveryAddress),

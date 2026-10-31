@@ -4,11 +4,14 @@ import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/models/order.dart';
+import '../../../shared/repositories/message_repository.dart';
 import '../../../shared/repositories/order_repository.dart';
 import '../../../shared/repositories/product_repository.dart';
+import '../../../shared/repositories/storage_repository.dart';
 import '../../auth/auth_controller.dart';
 import '../viewmodels/admin_inventory_viewmodel.dart';
 import '../viewmodels/admin_orders_viewmodel.dart';
+import '../viewmodels/inbox_viewmodel.dart';
 import 'inbox_tab.dart';
 import 'inventory_tab.dart';
 import 'orders_tab.dart';
@@ -50,7 +53,13 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           create: (c) => AdminOrdersViewModel(c.read<OrderRepository>()),
         ),
         ChangeNotifierProvider(
-          create: (c) => AdminInventoryViewModel(c.read<ProductRepository>()),
+          create: (c) => AdminInventoryViewModel(
+            c.read<ProductRepository>(),
+            storage: c.read<StorageRepository>(),
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (c) => InboxViewModel(c.read<MessageRepository>()),
         ),
       ],
       child: Scaffold(
@@ -65,19 +74,40 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
             ),
           ],
         ),
-        // The "+" of the wireframe: only on the Orders tab.
+        // The "+" of the wireframe: "Add order" on the Orders tab and
+        // "New product" on the Inventory tab.
         floatingActionButton: _index == 0
             ? FloatingActionButton(
                 tooltip: 'Add order',
-                backgroundColor: AppColors.olive,
-                foregroundColor: AppColors.ivory,
+                backgroundColor: AppColors.accent,
+                foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 onPressed: () => context.push('/admin/add-order'),
                 child: const Icon(Icons.add),
               )
-            : null,
+            : _index == 2
+                ? Builder(
+                    builder: (context) => FloatingActionButton.extended(
+                      tooltip: 'New product',
+                      backgroundColor: AppColors.accent,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      onPressed: () async {
+                        final inventory =
+                            context.read<AdminInventoryViewModel>();
+                        final saved =
+                            await context.push<bool>('/admin/product');
+                        if (saved == true) inventory.load(silent: true);
+                      },
+                      icon: const Icon(Icons.add),
+                      label: const Text('New product'),
+                    ),
+                  )
+                : null,
         // IndexedStack keeps every tab alive, so switching tabs never loses
         // a search, a filter or the scroll position.
         body: IndexedStack(
@@ -92,8 +122,6 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         bottomNavigationBar: NavigationBar(
           selectedIndex: _index,
           onDestinationSelected: _openTab,
-          backgroundColor: Colors.white,
-          indicatorColor: AppColors.sand,
           destinations: const [
             NavigationDestination(
               icon: Icon(Icons.receipt_long_outlined),
@@ -111,13 +139,29 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
               label: 'Inventory',
             ),
             NavigationDestination(
-              icon: Icon(Icons.forum_outlined),
-              selectedIcon: Icon(Icons.forum),
+              icon: _InboxIcon(selected: false),
+              selectedIcon: _InboxIcon(selected: true),
               label: 'Inbox',
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// The Inbox icon of the bottom bar, with a count of unread customer messages.
+class _InboxIcon extends StatelessWidget {
+  const _InboxIcon({required this.selected});
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    final unread = context.watch<InboxViewModel>().unreadCount;
+    return Badge(
+      isLabelVisible: unread > 0,
+      label: Text('$unread'),
+      child: Icon(selected ? Icons.forum : Icons.forum_outlined),
     );
   }
 }
@@ -199,7 +243,7 @@ class _AlertsSheet extends StatelessWidget {
           for (final o in payments)
             ListTile(
               leading: const Icon(Icons.receipt_long,
-                  color: AppColors.terracotta),
+                  color: AppColors.alert),
               title: Text('${adminOrderLabel(o)}: payment to review'),
               subtitle: Text(o.customerName ?? 'Customer'),
               onTap: () => onOpenOrder(o.id),
@@ -207,7 +251,7 @@ class _AlertsSheet extends StatelessWidget {
           for (final a in alerts)
             ListTile(
               leading: const Icon(Icons.inventory_2_outlined,
-                  color: AppColors.terracotta),
+                  color: AppColors.alert),
               title: Text(a.product.name),
               subtitle: Text(
                 '${a.variant.size} · ${a.variant.colour}: '

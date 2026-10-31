@@ -6,8 +6,11 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/boutique_location.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/product_photo.dart';
 import '../../../core/widgets/role_scaffold.dart';
+import '../../chat/chat_button.dart';
 import '../../../core/widgets/status_chip.dart';
 import '../../auth/auth_controller.dart';
 import '../../../shared/models/order.dart';
@@ -17,7 +20,7 @@ import '../viewmodels/rider_deliveries_viewmodel.dart';
 /// This app has one boutique store, not many vendors, so every order's
 /// "pickup" point is the same place. There's no store-address column in the
 /// schema, so this is a label, not a geocoded point.
-const String kPickupLabel = 'R&M Boutique (pickup)';
+const String kPickupLabel = kBoutiqueName;
 
 /// OWNER: rider. Main page, laid out to match the "Delivery Rider Main Page"
 /// wireframe: a Home dashboard (today's stats + the next delivery's route),
@@ -47,6 +50,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
         builder: (context, vm, _) {
           return RoleScaffold(
             title: _titles[_index],
+            actions: const [ChatButton(route: '/rider/chat')],
             bottomNavigationBar: NavigationBar(
               selectedIndex: _index,
               onDestinationSelected: (i) => setState(() => _index = i),
@@ -190,10 +194,10 @@ class _StatTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: highlighted ? AppColors.olive : AppColors.sand,
-      borderRadius: BorderRadius.circular(12),
+      color: highlighted ? AppColors.ink : AppColors.tint,
+      borderRadius: BorderRadius.circular(16),
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 6),
@@ -207,7 +211,7 @@ class _StatTile extends StatelessWidget {
                 style: TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 16,
-                  color: highlighted ? AppColors.ivory : AppColors.olive,
+                  color: highlighted ? AppColors.canvas : AppColors.ink,
                 ),
               ),
               const SizedBox(height: 2),
@@ -218,8 +222,8 @@ class _StatTile extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 11,
                   color: highlighted
-                      ? AppColors.ivory.withValues(alpha: 0.85)
-                      : AppColors.charcoal.withValues(alpha: 0.7),
+                      ? AppColors.canvas.withValues(alpha: 0.85)
+                      : AppColors.slate.withValues(alpha: 0.7),
                 ),
               ),
             ],
@@ -260,7 +264,7 @@ class _DashboardMapCard extends StatelessWidget {
                       width: 32,
                       height: 32,
                       child: const Icon(Icons.location_pin,
-                          color: AppColors.terracotta, size: 32),
+                          color: AppColors.alert, size: 32),
                     ),
                   ]),
                 ],
@@ -274,7 +278,7 @@ class _DashboardMapCard extends StatelessWidget {
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.6),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 child: const Text(
                   'Next stop',
@@ -330,7 +334,7 @@ class _NextDeliveryCard extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               '${order.customerName ?? 'Customer'} · ${money.format(order.total)}',
-              style: const TextStyle(color: Colors.black54, fontSize: 12),
+              style: const TextStyle(color: AppColors.muted, fontSize: 12),
             ),
             const SizedBox(height: 14),
             const _RouteRow(pickup: true, label: kPickupLabel),
@@ -339,7 +343,7 @@ class _NextDeliveryCard extends StatelessWidget {
               child: Container(
                   width: 1.4,
                   height: 18,
-                  color: AppColors.olive.withValues(alpha: 0.3)),
+                  color: AppColors.ink.withValues(alpha: 0.3)),
             ),
             _RouteRow(pickup: false, label: order.deliveryAddress),
             const SizedBox(height: 16),
@@ -380,7 +384,7 @@ class _RouteRow extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(pickup ? Icons.storefront : Icons.flag,
-            size: 18, color: pickup ? AppColors.olive : AppColors.terracotta),
+            size: 18, color: pickup ? AppColors.ink : AppColors.alert),
         const SizedBox(width: 10),
         Expanded(
             child: Text(label, maxLines: 2, overflow: TextOverflow.ellipsis)),
@@ -399,7 +403,7 @@ class _NoActiveDeliveryCard extends StatelessWidget {
         padding: EdgeInsets.all(24),
         child: Column(
           children: [
-            Icon(Icons.inventory_2_outlined, size: 36, color: AppColors.olive),
+            Icon(Icons.inventory_2_outlined, size: 36, color: AppColors.ink),
             SizedBox(height: 10),
             Text('No deliveries assigned right now',
                 textAlign: TextAlign.center,
@@ -407,7 +411,7 @@ class _NoActiveDeliveryCard extends StatelessWidget {
             SizedBox(height: 4),
             Text('New deliveries assigned to you will show up here.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.black54, fontSize: 12)),
+                style: TextStyle(color: AppColors.muted, fontSize: 12)),
           ],
         ),
       ),
@@ -432,8 +436,8 @@ class _ProfileTab extends StatelessWidget {
               children: [
                 const CircleAvatar(
                   radius: 32,
-                  backgroundColor: AppColors.olive,
-                  child: Icon(Icons.person, color: AppColors.ivory, size: 32),
+                  backgroundColor: AppColors.ink,
+                  child: Icon(Icons.person, color: AppColors.canvas, size: 32),
                 ),
                 const SizedBox(height: 12),
                 Text(
@@ -446,11 +450,11 @@ class _ProfileTab extends StatelessWidget {
                 if (profile?.phone != null && profile!.phone!.isNotEmpty) ...[
                   const SizedBox(height: 2),
                   Text(profile.phone!,
-                      style: const TextStyle(color: Colors.black54)),
+                      style: const TextStyle(color: AppColors.muted)),
                 ],
                 const SizedBox(height: 4),
                 const Text('Rider',
-                    style: TextStyle(color: Colors.black54, fontSize: 12)),
+                    style: TextStyle(color: AppColors.muted, fontSize: 12)),
               ],
             ),
           ),
@@ -483,6 +487,7 @@ class _DeliveriesList extends StatelessWidget {
         final o = orders[i];
         return Card(
           child: ListTile(
+            leading: OrderThumb(orderId: o.id),
             onTap: () => context.go('/rider/delivery/${o.id}'),
             title: Text(
                 'Order ${o.id.substring(0, 8)}  ·  ${money.format(o.total)}',
@@ -512,8 +517,8 @@ class _HistoryTab extends StatelessWidget {
           margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.sand,
-            borderRadius: BorderRadius.circular(12),
+            color: AppColors.tint,
+            borderRadius: BorderRadius.circular(16),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -534,9 +539,9 @@ class _HistoryTab extends StatelessWidget {
                         textAlign: TextAlign.right,
                         style: const TextStyle(
                             fontWeight: FontWeight.w700,
-                            color: AppColors.olive)),
+                            color: AppColors.ink)),
                     const Text('Estimated earnings',
-                        style: TextStyle(fontSize: 11, color: Colors.black54)),
+                        style: TextStyle(fontSize: 11, color: AppColors.muted)),
                   ],
                 ),
               ),

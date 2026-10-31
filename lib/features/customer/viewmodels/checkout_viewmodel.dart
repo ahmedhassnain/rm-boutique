@@ -8,18 +8,29 @@ import '../../../shared/repositories/order_repository.dart';
 /// OrderRepository.placeOrder. Stock and pricing are enforced by the database;
 /// a readable message comes back if an item has run out.
 class CheckoutViewModel extends ChangeNotifier {
-  CheckoutViewModel(this._orders, this.variantId, this.quantity);
+  CheckoutViewModel(this._orders, this.lines);
 
   final OrderRepository _orders;
-  final String variantId;
-  final int quantity;
+
+  /// Everything being bought: one line for "Buy now", several from the basket.
+  final List<CartLine> lines;
 
   DateTime? neededBy;
+  double? lat;
+  double? lng;
   bool placing = false;
   String? error;
 
   void setNeededBy(DateTime? date) {
     neededBy = date;
+    notifyListeners();
+  }
+
+  /// Called when the customer taps the map to pin their delivery spot.
+  /// The coordinates travel with the order so the rider's screen can show it.
+  void setLocation(double latitude, double longitude) {
+    lat = latitude;
+    lng = longitude;
     notifyListeners();
   }
 
@@ -31,7 +42,9 @@ class CheckoutViewModel extends ChangeNotifier {
     try {
       final id = await _orders.placeOrder(
         address: address.trim(),
-        items: [CartLine(variantId: variantId, quantity: quantity)],
+        items: lines,
+        lat: lat,
+        lng: lng,
         neededBy: neededBy,
         notes: (notes == null || notes.trim().isEmpty) ? null : notes.trim(),
       );

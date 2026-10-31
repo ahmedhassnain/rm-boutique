@@ -19,7 +19,7 @@ class OrderRepository {
     *,
     customer:profiles!orders_customer_id_fkey(full_name, phone),
     rider:profiles!orders_rider_id_fkey(full_name, phone),
-    order_items(*, product_variants(size, colour, products(name))),
+    order_items(*, product_variants(size, colour, products(name, image_path))),
     payments(*),
     deliveries(*)
   ''';
@@ -46,6 +46,20 @@ class OrderRepository {
       .stream(primaryKey: ['id'])
       .order('created_at', ascending: false)
       .map((rows) => rows.map(Order.fromJson).toList());
+
+  /// Photo path of the first item of an order (null if it has none). Used by
+  /// the live lists, whose orders arrive without their items.
+  Future<String?> firstItemImagePath(String orderId) async {
+    final rows = await _db
+        .from('order_items')
+        .select('product_variants(products(image_path))')
+        .eq('order_id', orderId)
+        .limit(1);
+    if (rows.isEmpty) return null;
+    final variant = rows.first['product_variants'];
+    final product = variant is Map ? variant['products'] : null;
+    return product is Map ? product['image_path'] as String? : null;
+  }
 
   /// Live single order, for the tracking screen.
   Stream<Order> watchOrder(String id) => _db
@@ -110,6 +124,41 @@ class OrderRepository {
       .from('payments')
       .stream(primaryKey: ['id'])
       .map((rows) => rows.map(Payment.fromJson).toList());
+
+  /// Admin: the registered customers, for the "Add order" picker.
+  Future<List<Profile>> fetchCustomers() async {
+    final rows = await _db
+        .from('profiles')
+        .select()
+        .eq('role', 'customer')
+        .order('full_name', ascending: true);
+    return rows.map<Profile>(Profile.fromJson).toList();
+  }
+
+  /// Admin: saves an order typed in for a registered customer (an Instagram,
+  /// WhatsApp or in-shop order). Same rules as [placeOrder]: the database
+  /// takes the prices and reduces the stock. Returns the new order id.
+  /// Throws PostgrestException with a readable message.
+  Future<String> adminPlaceOrder({
+    required String customerId,
+    required String address,
+    required List<CartLine> items,
+    double? lat,
+    double? lng,
+    DateTime? neededBy,
+    String? notes,
+  }) async {
+    final id = await _db.rpc('admin_place_order', params: {
+      'p_customer': customerId,
+      'p_address': address,
+      'p_lat': lat,
+      'p_lng': lng,
+      'p_needed_by': neededBy?.toIso8601String().substring(0, 10),
+      'p_notes': notes,
+      'p_items': items.map((l) => l.toJson()).toList(),
+    });
+    return id as String;
+  }
 
   /// Admin: the riders to choose from when assigning.
   Future<List<Profile>> fetchRiders() async {

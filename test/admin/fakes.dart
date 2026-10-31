@@ -1,10 +1,14 @@
 import 'dart:async';
+import 'dart:typed_data';
 
+import 'package:rm_boutique/shared/models/cart_line.dart';
+import 'package:rm_boutique/shared/models/chat_message.dart';
 import 'package:rm_boutique/shared/models/order.dart';
 import 'package:rm_boutique/shared/models/payment.dart';
 import 'package:rm_boutique/shared/models/product.dart';
 import 'package:rm_boutique/shared/models/profile.dart';
 import 'package:rm_boutique/shared/order_status.dart';
+import 'package:rm_boutique/shared/repositories/message_repository.dart';
 import 'package:rm_boutique/shared/repositories/order_repository.dart';
 import 'package:rm_boutique/shared/repositories/product_repository.dart';
 import 'package:rm_boutique/shared/repositories/storage_repository.dart';
@@ -63,6 +67,10 @@ class FakeOrderRepository extends OrderRepository {
 
   List<Order> orders = [];
   List<Profile> riders = [];
+  List<Profile> customers = [];
+  final List<String> adminOrders = []; // customer ids the admin ordered for
+  List<CartLine>? lastAdminItems;
+  Object? adminOrderError;
   Order? single;
   Object? fetchError;
   Object? actionError;
@@ -98,6 +106,25 @@ class FakeOrderRepository extends OrderRepository {
 
   @override
   Future<List<Profile>> fetchRiders() async => riders;
+
+  @override
+  Future<List<Profile>> fetchCustomers() async => customers;
+
+  @override
+  Future<String> adminPlaceOrder({
+    required String customerId,
+    required String address,
+    required List<CartLine> items,
+    double? lat,
+    double? lng,
+    DateTime? neededBy,
+    String? notes,
+  }) async {
+    if (adminOrderError != null) throw adminOrderError!;
+    adminOrders.add(customerId);
+    lastAdminItems = items;
+    return 'new-order-id';
+  }
 
   @override
   Future<void> advanceStatus(Order order) async {
@@ -138,6 +165,53 @@ class FakeProductRepository extends ProductRepository {
     if (updateError != null) throw updateError!;
     updates.add('$variantId=$stock');
   }
+
+  // Product form: every write is recorded as a short text, in order.
+  Object? variantsError;
+  final List<String> productWrites = [];
+
+  @override
+  Future<void> updateProduct(
+    String id, {
+    required String name,
+    required String description,
+    required String category,
+    required double price,
+    required bool isActive,
+  }) async {
+    if (updateError != null) throw updateError!;
+    productWrites.add('update $id $name|$category|$price|$isActive');
+  }
+
+  @override
+  Future<String> createProduct({
+    required String name,
+    required String description,
+    required String category,
+    required double price,
+    required bool isActive,
+  }) async {
+    if (updateError != null) throw updateError!;
+    productWrites.add('create $name|$category|$price|$isActive');
+    return 'new-id';
+  }
+
+  @override
+  Future<void> addVariants(
+    String productId,
+    List<({String size, String colour, int stock})> variants,
+  ) async {
+    if (variantsError != null) throw variantsError!;
+    productWrites.add('variants $productId ' +
+        variants.map((v) => '${v.size}/${v.colour}/${v.stock}').join(','));
+  }
+
+  @override
+  Future<void> deleteProduct(String id) async => productWrites.add('delete $id');
+
+  @override
+  Future<void> setImagePath(String productId, String path) async =>
+      productWrites.add('image $productId $path');
 }
 
 /// Stands in for StorageRepository: returns a fake link for any image.
@@ -147,6 +221,18 @@ class FakeStorageRepository extends StorageRepository {
   @override
   Future<String> signedUrl(String bucket, String path) async =>
       'https://example.supabase.co/$bucket/$path?signed=1';
+
+  Object? uploadError;
+  final List<String> removed = [];
+
+  @override
+  Future<String> uploadProductImage(String productId, Uint8List bytes) async {
+    if (uploadError != null) throw uploadError!;
+    return '$productId/new.jpg';
+  }
+
+  @override
+  Future<void> deleteProductImage(String path) async => removed.add(path);
 }
 
 /// A product with the given stock per size, for the inventory tests.
@@ -169,4 +255,63 @@ Product makeProduct({
             stock: stocks[i],
           ),
       ],
+    );
+
+/// Stands in for MessageRepository: the test pushes messages by hand.
+class FakeMessageRepository extends MessageRepository {
+  FakeMessageRepository() : super(client: _dummyClient());
+
+  final allStream = StreamController<List<ChatMessage>>.broadcast();
+  final threadStream = StreamController<List<ChatMessage>>.broadcast();
+  Map<String, ChatMember> members = {};
+  Object? sendError;
+
+  final List<String> sent = []; // "fromAdmin|tag|body"
+  final List<String> markedRead = [];
+
+  @override
+  Stream<List<ChatMessage>> watchAll() => allStream.stream;
+
+  @override
+  Stream<List<ChatMessage>> watchThread(String memberId) => threadStream.stream;
+
+  @override
+  Future<Map<String, ChatMember>> memberInfo(Iterable<String> ids) async => {
+        for (final id in ids)
+          if (members.containsKey(id)) id: members[id]!,
+      };
+
+  @override
+  Future<void> send({
+    required String memberId,
+    required String body,
+    required bool fromAdmin,
+    MessageTag? tag,
+  }) async {
+    if (sendError != null) throw sendError!;
+    sent.add('$fromAdmin|${tag?.dbValue}|$body');
+  }
+
+  @override
+  Future<void> markRead(String memberId) async => markedRead.add(memberId);
+}
+
+/// A chat message for the chat tests.
+ChatMessage makeMessage({
+  String id = 'm1',
+  String memberId = 'c1',
+  bool fromAdmin = false,
+  String body = 'Hello',
+  MessageTag? tag,
+  bool read = false,
+  DateTime? at,
+}) =>
+    ChatMessage(
+      id: id,
+      memberId: memberId,
+      fromAdmin: fromAdmin,
+      body: body,
+      tag: tag,
+      readAt: read ? DateTime(2026, 10, 31, 10) : null,
+      createdAt: at ?? DateTime(2026, 10, 31, 9),
     );

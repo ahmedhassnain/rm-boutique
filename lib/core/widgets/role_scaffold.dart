@@ -13,12 +13,16 @@ class RoleScaffold extends StatelessWidget {
     required this.body,
     this.floatingActionButton,
     this.bottomNavigationBar,
+    this.actions = const [],
   });
 
   final String title;
   final Widget body;
   final Widget? floatingActionButton;
   final Widget? bottomNavigationBar;
+
+  /// Extra buttons in the app bar, shown before the name and sign-out.
+  final List<Widget> actions;
 
   @override
   Widget build(BuildContext context) {
@@ -27,6 +31,7 @@ class RoleScaffold extends StatelessWidget {
       appBar: AppBar(
         title: Text(title),
         actions: [
+          ...actions,
           if (auth.profile != null)
             Center(child: Text(auth.profile!.fullName, style: const TextStyle(fontSize: 13))),
           IconButton(

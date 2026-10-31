@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'order_tracking.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/product_photo.dart';
 import '../../../core/widgets/status_chip.dart';
 import '../../../shared/repositories/order_repository.dart';
 import '../../../shared/repositories/storage_repository.dart';
@@ -64,6 +65,8 @@ class OrderDetailScreen extends StatelessWidget {
                           for (final i in o.items)
                             ListTile(
                               contentPadding: EdgeInsets.zero,
+                              leading:
+                                  ProductPhoto(imagePath: i.imagePath, size: 48),
                               title: Text(i.productName ?? 'Item'),
                               subtitle: Text(
                                   '${i.size ?? ''} ${i.colour ?? ''} × ${i.quantity}'
@@ -111,27 +114,27 @@ class _PaymentCard extends StatelessWidget {
         ? (
             'Payment needed',
             'Pay by bank transfer, then upload a screenshot of the receipt.',
-            AppColors.terracotta,
+            AppColors.alert,
             Icons.upload_file
           )
         : p.verified
             ? (
                 'Payment verified',
                 'Thank you! We are preparing your order.',
-                AppColors.olive,
+                AppColors.statusDelivered,
                 Icons.verified
               )
             : p.flagged
                 ? (
                     'Payment problem',
                     'The amount or receipt did not match. Please upload a clear, correct screenshot.',
-                    AppColors.terracotta,
+                    AppColors.alert,
                     Icons.error_outline
                   )
                 : (
                     'Waiting for verification',
                     'We received your screenshot. The shop will check it soon.',
-                    const Color(0xFF8A6D1F),
+                    AppColors.statusPaid,
                     Icons.hourglass_top
                   );
 
@@ -152,7 +155,7 @@ class _PaymentCard extends StatelessWidget {
             if (vm.proofUrl != null) ...[
               const SizedBox(height: 12),
               ClipRRect(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(16),
                 child: Image.network(
                   vm.proofUrl!,
                   height: 180,
@@ -166,7 +169,7 @@ class _PaymentCard extends StatelessWidget {
             ],
             if (vm.error != null) ...[
               const SizedBox(height: 8),
-              Text(vm.error!, style: const TextStyle(color: Colors.red)),
+              Text(vm.error!, style: const TextStyle(color: AppColors.alert)),
             ],
             if (vm.canUploadProof) ...[
               const SizedBox(height: 12),
