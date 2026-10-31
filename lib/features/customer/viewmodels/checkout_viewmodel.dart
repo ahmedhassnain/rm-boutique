@@ -42,11 +42,7 @@ class CheckoutViewModel extends ChangeNotifier {
     try {
       final id = await _orders.placeOrder(
         address: address.trim(),
-<<<<<<< HEAD
         items: lines,
-=======
-        items: [CartLine(variantId: variantId, quantity: quantity)],
->>>>>>> origin/main
         lat: lat,
         lng: lng,
         neededBy: neededBy,

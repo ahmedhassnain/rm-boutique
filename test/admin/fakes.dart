@@ -202,8 +202,8 @@ class FakeProductRepository extends ProductRepository {
     List<({String size, String colour, int stock})> variants,
   ) async {
     if (variantsError != null) throw variantsError!;
-    productWrites.add('variants $productId ' +
-        variants.map((v) => '${v.size}/${v.colour}/${v.stock}').join(','));
+    productWrites.add('variants $productId '
+        '${variants.map((v) => '${v.size}/${v.colour}/${v.stock}').join(',')}');
   }
 
   @override

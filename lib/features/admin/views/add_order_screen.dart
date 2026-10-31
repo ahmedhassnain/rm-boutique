@@ -268,7 +268,7 @@ class _CustomerPicker extends StatelessWidget {
     }
     return DropdownButtonFormField<String>(
       isExpanded: true,
-      value: vm.customer?.id,
+      initialValue: vm.customer?.id,
       decoration: const InputDecoration(
         labelText: 'Customer',
         helperText: 'The customer needs an account in the app',

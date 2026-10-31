@@ -97,7 +97,7 @@ void main() {
     });
 
     test('a new photo replaces and removes the old one', () async {
-      final product = Product(
+      const product = Product(
           id: 'p1', name: 'Thobe', price: 450, imagePath: 'p1/old.jpg');
       final vm = form(editing: product);
       final ok = await vm.save(
